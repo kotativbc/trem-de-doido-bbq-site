@@ -20,7 +20,11 @@ const CartDrawer = () => {
   const [changeAmount, setChangeAmount] = useState("");
   const [notes, setNotes] = useState("");
 
-  const isValid = name.trim() !== "" && (isPickup || address.trim() !== "");
+  const isValid = 
+    items.length > 0 &&
+    name.trim() !== "" && 
+    (isPickup || address.trim() !== "") &&
+    (payment !== "dinheiro" || changeAmount.trim() !== "");
 
   const handleClose = () => {
     setIsCartOpen(false);
