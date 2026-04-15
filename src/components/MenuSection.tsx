@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo, memo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Plus, Minus, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -7,12 +7,18 @@ import { useCart } from "@/context/CartContext";
 import { categories, menuItems, type MenuItem } from "@/data/menuData";
 import { menuImages } from "@/data/menuImages";
 
-const MenuCard = ({ item }: { item: MenuItem }) => {
+const MenuCard = memo(({ item }: { item: MenuItem }) => {
   const { items, addItem, removeItem } = useCart();
   const qty = items.find((i) => i.id === item.id)?.qty || 0;
   const isSunday = item.category === "domingos";
   const [expanded, setExpanded] = useState(false);
   const image = menuImages[item.id];
+
+  const handleAdd = useCallback(
+    () => addItem({ id: item.id, name: item.name, price: item.price, category: item.category }),
+    [addItem, item.id, item.name, item.price, item.category]
+  );
+  const handleRemove = useCallback(() => removeItem(item.id), [removeItem, item.id]);
 
   return (
     <motion.div
@@ -28,6 +34,8 @@ const MenuCard = ({ item }: { item: MenuItem }) => {
             alt={item.name}
             className="w-full h-full object-cover"
             loading="lazy"
+            width={400}
+            height={160}
           />
         </div>
       )}
@@ -42,7 +50,7 @@ const MenuCard = ({ item }: { item: MenuItem }) => {
           </div>
           {item.description && (
             <p
-              className={`text-muted-foreground text-sm mt-1 ${!expanded ? "line-clamp-2 md:line-clamp-none" : ""}`}
+              className={`text-muted-foreground text-sm mt-1 cursor-pointer ${!expanded ? "line-clamp-2 md:line-clamp-none" : ""}`}
               onClick={() => setExpanded(!expanded)}
             >
               {item.description}
@@ -59,16 +67,18 @@ const MenuCard = ({ item }: { item: MenuItem }) => {
               <Button
                 size="icon"
                 variant="outline"
-                className="h-8 w-8 border-border text-foreground"
-                onClick={() => removeItem(item.id)}
+                className="h-8 w-8 border-border text-foreground focus-visible:ring-2 focus-visible:ring-primary"
+                onClick={handleRemove}
+                aria-label={`Remover ${item.name}`}
               >
                 <Minus className="h-4 w-4" />
               </Button>
               <span className="text-foreground font-bold w-6 text-center">{qty}</span>
               <Button
                 size="icon"
-                className="h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90"
-                onClick={() => addItem({ id: item.id, name: item.name, price: item.price, category: item.category })}
+                className="h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary"
+                onClick={handleAdd}
+                aria-label={`Adicionar mais ${item.name}`}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -80,8 +90,9 @@ const MenuCard = ({ item }: { item: MenuItem }) => {
           <motion.div whileTap={{ scale: 1.05 }} className="mt-3">
             <Button
               variant="outline"
-              className="w-full border-border/50 bg-[#1A1A1A] text-primary hover:bg-primary hover:text-primary-foreground font-medium"
-              onClick={() => addItem({ id: item.id, name: item.name, price: item.price, category: item.category })}
+              className="w-full border-border/50 bg-[#1A1A1A] text-primary hover:bg-primary hover:text-primary-foreground font-medium focus-visible:ring-2 focus-visible:ring-primary"
+              onClick={handleAdd}
+              aria-label={`Adicionar ${item.name} ao carrinho`}
             >
               <Plus className="h-4 w-4 mr-1" /> Adicionar
             </Button>
@@ -90,12 +101,17 @@ const MenuCard = ({ item }: { item: MenuItem }) => {
       </div>
     </motion.div>
   );
-};
+});
+
+MenuCard.displayName = "MenuCard";
 
 const MenuSection = () => {
   const [activeCategory, setActiveCategory] = useState("hamburgueres");
   const tabsRef = useRef<HTMLDivElement>(null);
-  const filtered = menuItems.filter((i) => i.category === activeCategory);
+  const filtered = useMemo(
+    () => menuItems.filter((i) => i.category === activeCategory),
+    [activeCategory]
+  );
 
   return (
     <section id="cardapio" className="py-16">
@@ -107,11 +123,12 @@ const MenuSection = () => {
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-medium transition-colors shrink-0 ${
+              className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-medium transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
                 activeCategory === cat.id
                   ? "bg-primary text-primary-foreground"
                   : "bg-[#1A1A1A] text-muted-foreground hover:text-foreground"
               }`}
+              aria-pressed={activeCategory === cat.id}
             >
               {cat.label}
             </button>
