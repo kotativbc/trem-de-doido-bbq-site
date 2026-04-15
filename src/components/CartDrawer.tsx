@@ -73,7 +73,7 @@ ${itemsText}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#0A0A0A] border-l border-[#1A1A1A] z-[45] flex flex-col"
+            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#0A0A0A] border-l border-[#1A1A1A] z-[45] flex flex-col h-full max-h-screen"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#1A1A1A]">
@@ -86,7 +86,7 @@ ${itemsText}
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4" style={{ paddingBottom: "160px" }}>
+            <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-4 space-y-4 pb-32">
               {!showCheckout ? (
                 <>
                   {items.length === 0 ? (
@@ -182,7 +182,7 @@ ${itemsText}
 
             {/* Sticky Footer */}
             {totalItems > 0 && (
-              <div className="absolute bottom-0 left-0 right-0 border-t border-[#2A2A2A] bg-[#0A0A0A] px-5 pt-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}>
+              <div className="shrink-0 border-t border-[#2A2A2A] bg-[#121212] px-5 pt-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}>
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-[#E5E5E5] font-bold text-sm">Total do Pedido</span>
                   <span className="text-primary font-bold text-xl">R$ {totalPrice.toFixed(2).replace(".", ",")}</span>
