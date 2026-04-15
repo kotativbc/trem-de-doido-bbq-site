@@ -155,7 +155,7 @@ ${itemsText}
                   {/* Troco */}
                   {payment === "dinheiro" && (
                     <div className="space-y-1.5">
-                      <Label className={labelClasses}>Precisa de troco? Para quanto?</Label>
+                      <Label className={labelClasses}>Precisa de troco? Para quanto? *</Label>
                       <Input value={changeAmount} onChange={(e) => setChangeAmount(e.target.value)} placeholder="Ex: 100,00" className={inputClasses} />
                     </div>
                   )}
@@ -204,7 +204,15 @@ ${itemsText}
                     <Button variant="ghost" className="w-full text-[#888] hover:text-[#E5E5E5] text-sm" onClick={() => setShowCheckout(false)}>
                       ← Voltar à Sacola
                     </Button>
+                    <button onClick={handleClose} className="w-full text-primary/70 hover:text-primary text-xs py-2 transition-colors">
+                      + Adicionar mais itens
+                    </button>
                   </div>
+                )}
+                {!showCheckout && items.length > 0 && (
+                  <button onClick={handleClose} className="w-full text-primary/70 hover:text-primary text-xs py-2 mt-2 transition-colors">
+                    + Adicionar mais itens
+                  </button>
                 )}
               </div>
             )}
