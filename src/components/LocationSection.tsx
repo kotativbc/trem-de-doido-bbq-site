@@ -10,8 +10,8 @@ const infoBlocks = [
     icon: Clock,
     title: "HORÁRIO DE FUNCIONAMENTO",
     lines: [
-      { text: "Segunda, Quarta a Domingo: 18:00 – 23:00", className: "text-muted-foreground" },
-      { text: "Fechado às terças-feiras", className: "text-red-500 text-sm" },
+      { text: "Quarta a Domingo: 18:00 – 23:00", className: "text-muted-foreground" },
+      { text: "Fechado às segundas e terças-feiras", className: "text-red-500 text-sm" },
     ],
   },
   {
