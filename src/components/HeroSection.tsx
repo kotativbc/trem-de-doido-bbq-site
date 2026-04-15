@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import heroBg from "@/assets/hero-bbq.jpg";
@@ -19,7 +19,7 @@ export const SmokeButton = ({ onClick, children, className = "" }: { onClick?: (
       <Button
         onClick={onClick}
         size="lg"
-        className={className}
+        className={`focus-visible:ring-2 focus-visible:ring-primary ${className}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -34,14 +34,22 @@ const HeroSection = () => {
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
 
-  const scrollTo = (id: string) => {
+  const scrollTo = useCallback((id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
 
   return (
     <section ref={ref} className="relative h-screen min-h-[600px] overflow-hidden pt-16">
       <motion.div style={{ y }} className="absolute inset-0">
-        <img src={heroBg} alt="BBQ defumado" className="w-full h-full object-cover" width={1920} height={1080} />
+        <img
+          src={heroBg}
+          alt="BBQ defumado no estilo American Barbecue"
+          className="w-full h-full object-cover"
+          width={1920}
+          height={1080}
+          loading="eager"
+          fetchPriority="high"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/50 to-background" />
       </motion.div>
 
@@ -86,6 +94,7 @@ const HeroSection = () => {
             animate={{ y: [0, 8, 0] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
             className="mt-6"
+            aria-hidden="true"
           >
             <ChevronDown className="text-muted-foreground" size={28} />
           </motion.div>

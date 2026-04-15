@@ -4,14 +4,14 @@ const FooterSection = () => (
   <footer className="border-t border-border py-8 bg-surface-dark">
     <div className="container mx-auto px-4 text-center">
       <div className="flex items-center justify-center gap-2 mb-4">
-        <Flame className="h-5 w-5 text-primary" />
+        <Flame className="h-5 w-5 text-primary" aria-hidden="true" />
         <span className="font-['Bebas_Neue'] text-lg tracking-wider text-foreground">TREM DE DOIDO BBQ</span>
       </div>
       <div className="flex items-center justify-center gap-4 mb-4">
-        <a href="https://wa.me/5531997036657" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+        <a href="https://wa.me/5531997036657" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded" aria-label="WhatsApp">
           <MessageCircle className="h-5 w-5" />
         </a>
-        <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+        <a href="#" className="text-muted-foreground hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded" aria-label="Instagram">
           <Instagram className="h-5 w-5" />
         </a>
       </div>
