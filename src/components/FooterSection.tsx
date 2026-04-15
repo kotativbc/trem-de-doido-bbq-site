@@ -15,7 +15,7 @@ const FooterSection = () => (
           <Instagram className="h-5 w-5" />
         </a>
       </div>
-      <p className="text-muted-foreground text-sm">© 2025 Trem de Doido BBQ — Sarzedo/MG</p>
+      <p className="text-muted-foreground text-sm">© 2026 Trem de Doido BBQ — Sarzedo/MG - Desenvolvido por{" "}<a href="https://wa.me/5531933046961?text=Ol%C3%A1%2C%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20Cardapio%20Digital" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">KotaTI</a></p>
     </div>
   </footer>
 );
