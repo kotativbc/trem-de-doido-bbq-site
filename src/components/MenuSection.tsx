@@ -16,7 +16,9 @@ const MenuCard = ({ item }: { item: MenuItem }) => {
 
   return (
     <motion.div
+      whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.98 }}
+      transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
       className={`bg-[#111111] rounded-lg border ${isSunday ? "border-sunday" : "border-border/50"} flex flex-col justify-between hover:border-primary/50 transition-colors overflow-hidden`}
     >
       {image && (
