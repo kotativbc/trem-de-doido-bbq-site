@@ -5,43 +5,55 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { categories, menuItems, type MenuItem } from "@/data/menuData";
+import { menuImages } from "@/data/menuImages";
 
 const MenuCard = ({ item }: { item: MenuItem }) => {
   const { items, addItem, removeItem } = useCart();
   const qty = items.find((i) => i.id === item.id)?.qty || 0;
   const isSunday = item.category === "domingos";
   const [expanded, setExpanded] = useState(false);
+  const image = menuImages[item.id];
 
   return (
     <motion.div
       whileTap={{ scale: 0.98 }}
-      className={`bg-card rounded-lg border ${isSunday ? "border-sunday" : "border-border"} p-4 flex flex-col justify-between hover:border-primary/50 transition-colors`}
+      className={`bg-[#111111] rounded-lg border ${isSunday ? "border-sunday" : "border-border/50"} flex flex-col justify-between hover:border-primary/50 transition-colors overflow-hidden`}
     >
-      <div>
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-['Bebas_Neue'] text-lg text-foreground tracking-wide">{item.name}</h3>
-          <div className="flex items-center gap-1 shrink-0">
-            {isSunday && <Badge variant="outline" className="border-sunday text-sunday text-xs">Especial</Badge>}
-            {item.badge && <Badge className="bg-green-600 text-primary-foreground text-xs">{item.badge}</Badge>}
-          </div>
+      {image && (
+        <div className="w-full h-40 overflow-hidden">
+          <img
+            src={image}
+            alt={item.name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
         </div>
-        {item.description && (
-          <p
-            className={`text-muted-foreground text-sm mt-1 ${!expanded ? "line-clamp-2 md:line-clamp-none" : ""}`}
-            onClick={() => setExpanded(!expanded)}
-          >
-            {item.description}
-          </p>
-        )}
-      </div>
+      )}
+      <div className="p-4 flex flex-col flex-1">
+        <div>
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-['Bebas_Neue'] text-lg text-foreground tracking-wide">{item.name}</h3>
+            <div className="flex items-center gap-1 shrink-0">
+              {isSunday && <Badge variant="outline" className="border-sunday text-sunday text-xs">Especial</Badge>}
+              {item.badge && <Badge className="bg-green-600 text-primary-foreground text-xs">{item.badge}</Badge>}
+            </div>
+          </div>
+          {item.description && (
+            <p
+              className={`text-muted-foreground text-sm mt-1 ${!expanded ? "line-clamp-2 md:line-clamp-none" : ""}`}
+              onClick={() => setExpanded(!expanded)}
+            >
+              {item.description}
+            </p>
+          )}
+        </div>
 
-      <div className="flex items-center justify-between mt-3">
-        <Badge className="bg-primary text-primary-foreground font-bold text-sm px-3">
-          R$ {item.price.toFixed(2).replace(".", ",")}
-        </Badge>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between mt-3">
+          <Badge className="bg-primary text-primary-foreground font-bold text-sm px-3">
+            R$ {item.price.toFixed(2).replace(".", ",")}
+          </Badge>
           {qty > 0 && (
-            <>
+            <div className="flex items-center gap-2">
               <Button
                 size="icon"
                 variant="outline"
@@ -51,18 +63,28 @@ const MenuCard = ({ item }: { item: MenuItem }) => {
                 <Minus className="h-4 w-4" />
               </Button>
               <span className="text-foreground font-bold w-6 text-center">{qty}</span>
-            </>
+              <Button
+                size="icon"
+                className="h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => addItem({ id: item.id, name: item.name, price: item.price, category: item.category })}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           )}
-          <motion.div whileTap={{ scale: 1.2 }}>
+        </div>
+
+        {qty === 0 && (
+          <motion.div whileTap={{ scale: 1.05 }} className="mt-3">
             <Button
-              size="icon"
-              className="h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90"
+              variant="outline"
+              className="w-full border-border/50 bg-[#1A1A1A] text-primary hover:bg-primary hover:text-primary-foreground font-medium"
               onClick={() => addItem({ id: item.id, name: item.name, price: item.price, category: item.category })}
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4 mr-1" /> Adicionar
             </Button>
           </motion.div>
-        </div>
+        )}
       </div>
     </motion.div>
   );
@@ -83,10 +105,10 @@ const MenuSection = () => {
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors shrink-0 ${
+              className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-medium transition-colors shrink-0 ${
                 activeCategory === cat.id
                   ? "bg-primary text-primary-foreground"
-                  : "bg-card text-muted-foreground hover:text-foreground border border-border"
+                  : "bg-[#1A1A1A] text-muted-foreground hover:text-foreground"
               }`}
             >
               {cat.label}

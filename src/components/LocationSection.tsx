@@ -2,7 +2,7 @@ import { MapPin, Clock, X, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const hours = [
-  { day: "Segunda", time: "18:00 – 23:00", open: true },
+  { day: "Segunda", time: "FECHADO", open: false },
   { day: "Terça-feira", time: "FECHADO", open: false },
   { day: "Quarta", time: "18:00 – 23:00", open: true },
   { day: "Quinta", time: "18:00 – 23:00", open: true },
