@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Plus, Minus, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/hooks/useCart";
 import { categories, menuItems, type MenuItem } from "@/data/menuData";
 import { menuImages } from "@/data/menuImages";
 
