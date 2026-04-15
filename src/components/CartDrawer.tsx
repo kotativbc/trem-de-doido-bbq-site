@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/hooks/useCart";
 
 const CartDrawer = () => {
   const { items, addItem, removeItem, totalPrice, totalItems, isCartOpen, setIsCartOpen, clearCart } = useCart();

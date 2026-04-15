@@ -1,7 +1,7 @@
 import { memo, useCallback } from "react";
 import { Flame, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/hooks/useCart";
 import { motion } from "framer-motion";
 
 const StickyHeader = memo(() => {

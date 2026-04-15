@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/hooks/useCart";
 import { MapPin } from "lucide-react";
 
 const CheckoutSection = () => {

@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/hooks/useCart";
 
 const MobileCartBar = memo(() => {
   const { totalItems, totalPrice, setIsCartOpen } = useCart();

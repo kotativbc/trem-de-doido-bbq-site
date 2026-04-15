@@ -1,6 +1,6 @@
 import { memo, useCallback } from "react";
 import { UtensilsCrossed, MapPin, MessageCircle, ShoppingCart } from "lucide-react";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/hooks/useCart";
 
 const MobileBottomNav = memo(() => {
   const { totalItems, setIsCartOpen } = useCart();
