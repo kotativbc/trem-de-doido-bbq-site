@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import heroBg from "@/assets/hero-bbq.jpg";
 
-const SmokeButton = ({ onClick, children, className = "" }: { onClick: () => void; children: React.ReactNode; className?: string }) => {
+export const SmokeButton = ({ onClick, children, className = "" }: { onClick?: () => void; children: React.ReactNode; className?: string }) => {
   const [isHovered, setIsHovered] = useState(false);
   return (
     <div className="relative inline-flex items-center justify-center">
@@ -29,9 +29,28 @@ const SmokeButton = ({ onClick, children, className = "" }: { onClick: () => voi
   );
 };
 
-// ... keep existing code
+const HeroSection = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
 
-         className="text-5xl md:text-7xl lg:text-8xl font-['Bebas_Neue'] text-foreground leading-none"
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  return (
+    <section ref={ref} className="relative h-screen min-h-[600px] overflow-hidden pt-16">
+      <motion.div style={{ y }} className="absolute inset-0">
+        <img src={heroBg} alt="BBQ defumado" className="w-full h-full object-cover" width={1920} height={1080} />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/50 to-background" />
+      </motion.div>
+
+      <div className="relative z-10 container mx-auto flex flex-col items-center justify-center h-full text-center px-4">
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-5xl md:text-7xl lg:text-8xl font-['Bebas_Neue'] text-foreground leading-none"
         >
           O VERDADEIRO <span className="text-primary">AMERICAN BBQ</span>
         </motion.h1>
