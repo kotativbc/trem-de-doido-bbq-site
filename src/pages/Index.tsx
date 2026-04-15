@@ -1,16 +1,32 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { CartProvider } from "@/context/CartContext";
+import StickyHeader from "@/components/StickyHeader";
+import HeroSection from "@/components/HeroSection";
+import SocialProof from "@/components/SocialProof";
+import MenuSection from "@/components/MenuSection";
+import PitmasterSection from "@/components/PitmasterSection";
+import LocationSection from "@/components/LocationSection";
+import FooterSection from "@/components/FooterSection";
+import MobileBottomNav from "@/components/MobileBottomNav";
+import MobileCartBar from "@/components/MobileCartBar";
+import CartDrawer from "@/components/CartDrawer";
+import CheckoutSection from "@/components/CheckoutSection";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
-  return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+const Index = () => (
+  <CartProvider>
+    <div className="min-h-screen bg-background pb-[80px] md:pb-0">
+      <StickyHeader />
+      <HeroSection />
+      <SocialProof />
+      <MenuSection />
+      <PitmasterSection />
+      <LocationSection />
+      <CheckoutSection />
+      <FooterSection />
+      <CartDrawer />
+      <MobileCartBar />
+      <MobileBottomNav />
     </div>
-  );
-};
-
-const Index = PlaceholderIndex;
+  </CartProvider>
+);
 
 export default Index;
