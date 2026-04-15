@@ -38,7 +38,7 @@ const LocationSection = () => (
         <div className="rounded-2xl overflow-hidden h-[350px] lg:h-full min-h-[350px]">
           <iframe
             title="Localização Trem de Doido BBQ"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3752.5!2d-44.08!3d-20.04!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjDCsDAyJzI0LjAiUyA0NMKwMDQnNDguMCJX!5e0!3m2!1spt-BR!2sbr!4v1"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3750.8!2d-44.1346707!3d-20.0453441!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xa6c70ea0bf6bb5%3A0x4ddb7497a92a1beb!2sTrem%20de%20Doido%20Barbecue!5e0!3m2!1spt-BR!2sbr!4v1"
             width="100%"
             height="100%"
             style={{ border: 0 }}
