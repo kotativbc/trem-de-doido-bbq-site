@@ -9,7 +9,6 @@ import FooterSection from "@/components/FooterSection";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import MobileCartBar from "@/components/MobileCartBar";
 import CartDrawer from "@/components/CartDrawer";
-import CheckoutSection from "@/components/CheckoutSection";
 
 const Index = () => (
   <CartProvider>
@@ -20,7 +19,6 @@ const Index = () => (
       <MenuSection />
       <PitmasterSection />
       <LocationSection />
-      <CheckoutSection />
       <FooterSection />
       <CartDrawer />
       <MobileCartBar />
