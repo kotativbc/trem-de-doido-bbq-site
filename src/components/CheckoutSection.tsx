@@ -9,7 +9,7 @@ import { MapPin } from "lucide-react";
 const CheckoutSection = () => {
   const { items, totalPrice, isCheckoutOpen, clearCart } = useCart();
   const [name, setName] = useState("");
-  const [deliveryType, setDeliveryType] = useState<"entrega" | "retirada">("retirada");
+  const [deliveryType, setDeliveryType] = useState<"entrega" | "retirada">("entrega");
   const [address, setAddress] = useState("");
   const [payment, setPayment] = useState("pix");
   const [needChange, setNeedChange] = useState(false);

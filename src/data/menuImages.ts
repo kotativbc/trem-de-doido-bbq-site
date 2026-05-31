@@ -11,6 +11,7 @@ import h4 from "@/assets/menu/h4-tradicional.jpg";
 import h5 from "@/assets/menu/h5-big-especial.jpg";
 import h6 from "@/assets/menu/h6-kids.jpg";
 import h7 from "@/assets/menu/h7-especial.jpg";
+import h8 from "@/assets/menu/h8-brutus.jpg";
 // Combos
 import c1 from "@/assets/menu/c1-familia.jpg";
 import c2 from "@/assets/menu/c2-casal.jpg";
@@ -40,7 +41,7 @@ import be5 from "@/assets/menu/be5-heineken.jpg";
 
 export const menuImages: Record<string, string> = {
   d1, d2, d3, d4,
-  h1, h2, h3, h4, h5, h6, h7,
+  h1, h2, h3, h4, h5, h6, h7, h8,
   c1, c2, c3,
   e1, e2, e3, e4,
   b1, b2, b3, b4, b5, b6, b7,

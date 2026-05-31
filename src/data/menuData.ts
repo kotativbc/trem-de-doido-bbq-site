@@ -31,6 +31,7 @@ export const menuItems: MenuItem[] = [
   { id: "h5", name: "Big Trem de Doido Especial", description: "Pão de brioche, 2 carnes 160g, 3 fatias cheddar, 4 fatias bacon, alface, tomate, maionese Trem de Doido", price: 49.9, category: "hamburgueres" },
   { id: "h6", name: "Trem de Doido Kids", description: "Pão de brioche, burger 160g, queijo cheddar, maionese e ketchup", price: 29.9, category: "hamburgueres" },
   { id: "h7", name: "Trem de Doido Especial", description: "Escolha de pão (vermelho, australiano ou tradicional), 1 carne 160g, 3 fatias cheddar, 4 fatias bacon, alface, tomate, maionese e ketchup Heinz", price: 39.9, category: "hamburgueres" },
+  { id: "h8", name: "Trem de Doido Brutus", description: "Carne de 160g, Queijo cheddar, Costela bovina desfiada (160g), Queijo muçarela, Rúcula, Tomate e Alface americana.", price: 49.9, category: "hamburgueres", badge: "Novo" },
   // COMBOS
   { id: "c1", name: "Combo Família", description: "4 Burger Trem de Doido + 1 Refrigerante 2L", price: 149.9, category: "combos" },
   { id: "c2", name: "Combo Casal", description: "2 Burger Trem de Doido Tradicional + 1 Refrigerante 600ml grátis", price: 64.9, category: "combos" },
