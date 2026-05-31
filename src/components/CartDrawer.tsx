@@ -14,15 +14,16 @@ const CartDrawer = () => {
 
   const [showCheckout, setShowCheckout] = useState(false);
   const [name, setName] = useState("");
-  const [isPickup, setIsPickup] = useState(true);
+  const [deliveryType, setDeliveryType] = useState<"entrega" | "retirada">("entrega");
   const [address, setAddress] = useState("");
   const [payment, setPayment] = useState("pix");
   const [changeAmount, setChangeAmount] = useState("");
   const [notes, setNotes] = useState("");
 
-  const isValid = 
+  const isPickup = deliveryType === "retirada";
+  const isValid =
     items.length > 0 &&
-    name.trim() !== "" && 
+    name.trim() !== "" &&
     (isPickup || address.trim() !== "") &&
     (payment !== "dinheiro" || changeAmount.trim() !== "");
 
@@ -139,12 +140,32 @@ ${itemsText}
                     <Input id="checkout-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome completo" className={inputClasses} />
                   </div>
 
-                  <div className="flex items-center justify-between bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <MapPin className="h-5 w-5 text-primary" aria-hidden="true" />
-                      <span className="text-[#E5E5E5] text-sm font-medium">Retirada no Balcão</span>
+                  <div className="space-y-2">
+                    <Label className={labelClasses}>Tipo de Entrega *</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {([
+                        { value: "entrega", label: "Entrega" },
+                        { value: "retirada", label: "Retirar no Balcão" },
+                      ] as const).map((opt) => {
+                        const active = deliveryType === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setDeliveryType(opt.value)}
+                            className={`flex items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
+                              active
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-[#1C1C1C] text-[#E5E5E5] border-[#2A2A2A] hover:border-[#444]"
+                            }`}
+                            aria-pressed={active}
+                          >
+                            <MapPin className="h-4 w-4" aria-hidden="true" />
+                            {opt.label}
+                          </button>
+                        );
+                      })}
                     </div>
-                    <Switch checked={isPickup} onCheckedChange={setIsPickup} aria-label="Retirada no balcão" />
                   </div>
 
                   {!isPickup && (
