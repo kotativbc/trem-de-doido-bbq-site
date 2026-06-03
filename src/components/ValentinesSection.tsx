@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Heart, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import flyerAsset from "@/assets/namorados-flyer.jpg.asset.json";
+import valentinesFlyer from "@/assets/valentines-flyer.jpg";
 
 const WHATSAPP_MESSAGE = `*🔥 RESERVA DIA DOS NAMORADOS - TREM DE DOIDO BBQ*
 Olá! Gostaria de garantir minha mesa para o jantar de Dia dos Namorados. Estou ciente do valor do pacote (R$ 200,00) e da taxa de reserva (R$ 100,00). Como faço para transferir o sinal?`;
