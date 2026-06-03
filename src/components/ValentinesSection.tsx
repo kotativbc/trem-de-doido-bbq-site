@@ -33,7 +33,7 @@ const ValentinesSection = () => {
               className="p-6 md:p-8 flex items-center justify-center"
             >
               <img
-                src={flyerAsset.url}
+                src={valentinesFlyer}
                 alt="Cardápio especial Dia dos Namorados - Trem de Doido BBQ"
                 className="w-full h-auto rounded-lg shadow-2xl ring-1 ring-[#D4AF37]/30"
                 loading="lazy"
