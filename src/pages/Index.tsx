@@ -1,7 +1,6 @@
 import { CartProvider } from "@/context/CartContext";
 import StickyHeader from "@/components/StickyHeader";
 import HeroSection from "@/components/HeroSection";
-import ValentinesSection from "@/components/ValentinesSection";
 import SocialProof from "@/components/SocialProof";
 import MenuSection from "@/components/MenuSection";
 import PitmasterSection from "@/components/PitmasterSection";
@@ -16,7 +15,6 @@ const Index = () => (
     <div className="min-h-screen bg-background pb-[80px] md:pb-0">
       <StickyHeader />
       <HeroSection />
-      <ValentinesSection />
       <SocialProof />
       <MenuSection />
       <PitmasterSection />
