@@ -48,7 +48,7 @@ export const menuItems: MenuItem[] = [
   { id: "b4", name: "Chicken Legs", description: "Coxa e sobrecoxa de frango defumada", price: 15, category: "bbq" },
   { id: "b5", name: "Fraldinha Defumada", description: "Fraldinha Angus defumada, extremamente suculenta", price: 90, category: "bbq", badge: "Novo" },
   { id: "b6", name: "Frango Defumado", description: "Frango inteiro defumado no Pit Smoker", price: 60, category: "bbq" },
-  { id: "b7", name: "Tábua Mista", description: "Seleção dos melhores cortes do dia (Bovino, Suíno e Acompanhamentos)", price: 100, category: "bbq", badge: "Novo" },
+  { id: "b7", name: "Tábua Mista", description: "Seleção dos melhores cortes do dia (Bovino, Suíno e Acompanhamentos)", price: 140, category: "bbq", badge: "Novo" },
   // ACOMPANHAMENTOS
   { id: "a1", name: "Batata Rústica 300g", description: "Batata rústica na brasa com molho grill", price: 15, category: "acompanhamentos" },
   { id: "a2", name: "Batata Rústica 500g", description: "Batata rústica na brasa porção grande", price: 20, category: "acompanhamentos" },
