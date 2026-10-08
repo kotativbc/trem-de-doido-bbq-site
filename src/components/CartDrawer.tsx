@@ -1,11 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Minus, ShoppingCart, MapPin, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCart } from "@/hooks/useCart";
 
@@ -31,6 +30,30 @@ const CartDrawer = () => {
     setIsCartOpen(false);
     setShowCheckout(false);
   }, [setIsCartOpen]);
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Enquanto o drawer está aberto: trava o scroll da página, fecha com Escape
+  // e devolve o foco ao elemento que o abriu quando fecha.
+  useEffect(() => {
+    if (!isCartOpen) return;
+
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    dialogRef.current?.focus();
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus?.();
+    };
+  }, [isCartOpen, handleClose]);
 
   const handleSubmit = useCallback(() => {
     const itemsText = items.map((i) => `${i.name} x${i.qty} — R$ ${(i.price * i.qty).toFixed(2).replace(".", ",")}`).join("\n");
@@ -66,17 +89,20 @@ ${itemsText}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[45]"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[55]"
             onClick={handleClose}
             aria-hidden="true"
           />
           <motion.div
+            ref={dialogRef}
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#0A0A0A] border-l border-[#1A1A1A] z-[45] flex flex-col h-full max-h-screen"
+            className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-[#0A0A0A] border-l border-[#1A1A1A] z-[60] flex flex-col h-full max-h-screen outline-none"
             role="dialog"
+            aria-modal="true"
+            tabIndex={-1}
             aria-label={showCheckout ? "Finalizar Pedido" : "Sacola de compras"}
           >
             {/* Header */}

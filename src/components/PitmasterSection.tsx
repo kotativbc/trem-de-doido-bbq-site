@@ -3,7 +3,7 @@ import { Flame } from "lucide-react";
 import pitmasterImg from "@/assets/pitmaster.jpg";
 
 const PitmasterSection = () => (
-  <section className="py-20 bg-[#0A0A0A]">
+  <section className="py-20 bg-[#0A0A0A] overflow-x-clip">
     <div className="container mx-auto px-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
         <motion.div

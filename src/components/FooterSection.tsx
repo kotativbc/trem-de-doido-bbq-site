@@ -11,7 +11,7 @@ const FooterSection = () => (
         <a href="https://wa.me/5531997036657" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded" aria-label="WhatsApp">
           <MessageCircle className="h-5 w-5" />
         </a>
-        <a href="#" className="text-muted-foreground hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded" aria-label="Instagram">
+        <a href="https://instagram.com/tremdedoidobbq" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded" aria-label="Instagram">
           <Instagram className="h-5 w-5" />
         </a>
       </div>

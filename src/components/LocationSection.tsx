@@ -1,12 +1,18 @@
 import { MapPin, Clock, Phone, Instagram } from "lucide-react";
 
-const infoBlocks = [
+const infoBlocks: {
+  id?: string;
+  icon: typeof MapPin;
+  title: string;
+  lines: { text: string; className: string }[];
+}[] = [
   {
     icon: MapPin,
     title: "ENDEREÇO",
     lines: [{ text: "Av. João Pinheiro, 107 - Sarzedo/MG", className: "text-muted-foreground" }],
   },
   {
+    id: "horarios",
     icon: Clock,
     title: "HORÁRIO DE FUNCIONAMENTO",
     lines: [
@@ -50,8 +56,8 @@ const LocationSection = () => (
 
         {/* Right Column - Info Blocks */}
         <div className="flex flex-col space-y-6">
-          {infoBlocks.map(({ icon: Icon, title, lines }) => (
-            <div key={title} className="flex items-start gap-4">
+          {infoBlocks.map(({ id, icon: Icon, title, lines }) => (
+            <div key={title} id={id} className="flex items-start gap-4 scroll-mt-24">
               <div className="bg-[#1A1A1A] w-12 h-12 flex items-center justify-center rounded-full shrink-0">
                 <Icon className="h-5 w-5 text-primary" />
               </div>
