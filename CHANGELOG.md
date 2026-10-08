@@ -51,4 +51,3 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/).
 ### Limitações conhecidas
 - Modo demo: pedidos, cupons e senha do admin ficam no navegador; limites de uso de cupom e preços só são confiáveis com validação em servidor.
 - Sem pagamento online (fora do escopo).
-- Sem `sitemap.xml` (depende do domínio final).

@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /pedido/
+
+Sitemap: https://tremdedoidobbq.com.br/sitemap.xml

@@ -32,7 +32,7 @@ Copie `.env.example` para `.env.local`. Tudo que começa com `VITE_` é público
 |---|---|---|
 | `VITE_BACKEND` | `php` = cardápio no servidor e editor por link secreto (já definido em `.env.production`); `demo` = tudo no navegador | `demo` (dev e testes) |
 | `VITE_ENABLE_DEMO_ADMIN` | `true` liga o painel `/admin` de demonstração mesmo com `VITE_BACKEND=php` | desligado |
-| `VITE_SITE_URL` | URL pública (sem barra final) para `canonical` e `og:image` no build | vazio (caminhos relativos) |
+| `VITE_SITE_URL` | URL pública (sem barra final) para `canonical` e `og:image` no build | `https://tremdedoidobbq.com.br` (em `.env.production`) |
 
 ## Publicar na hospedagem (DirectAdmin ou qualquer Apache/LiteSpeed com PHP)
 
@@ -42,7 +42,7 @@ O site é estático (HTML, CSS e JavaScript gerados pelo build) mais uma API PHP
 
 ```bash
 npm install
-npm run gerar-link -- https://www.seudominio.com.br   # cria o link secreto de edição (veja abaixo)
+npm run gerar-link   # cria o link secreto de edição para https://tremdedoidobbq.com.br (veja abaixo)
 ```
 
 **A cada atualização do site:**
@@ -57,19 +57,19 @@ Envie **todo o conteúdo de `dist/`** para a pasta `public_html` (pelo Gerenciad
 - **Não apague** as pastas `api/data` (cardápio salvo e histórico) e `uploads` (fotos enviadas pelo editor) ao atualizar. Sobrescrever sem apagar é seguro: o `dist/` não contém essas pastas.
 - O site precisa estar na **raiz** do domínio (ou subdomínio). Para uma subpasta, defina `base` em `vite.config.ts`.
 - O PHP precisa ser 7.4 ou superior, com permissão de escrita na pasta `api/` e na raiz (para criar `api/data` e `uploads`). Na maioria das hospedagens DirectAdmin isso já é o padrão (pastas 755).
-- Antes do build, copie `VITE_SITE_URL` (ex.: `https://www.seudominio.com.br`) para um arquivo `.env.production.local` se quiser que o `canonical` e a imagem de compartilhamento saiam com o endereço completo.
+- O endereço público (`https://tremdedoidobbq.com.br`) já está em `.env.production` (`VITE_SITE_URL`) e vai para o `canonical` e a imagem de compartilhamento. Se usar `www` ou outro domínio, ajuste lá e também em `public/sitemap.xml` e `public/robots.txt`, que têm o endereço escrito.
 
 ## Link secreto para editar o cardápio
 
 O cliente edita o cardápio (adicionar, remover, alterar preço, foto, descrição, esgotar, ordem, categorias) por um endereço como:
 
 ```
-https://www.seudominio.com.br/gerenciar/3f9a...c41d     (48 caracteres aleatórios)
+https://tremdedoidobbq.com.br/gerenciar/3f9a...c41d     (48 caracteres aleatórios)
 ```
 
 - **Sem senha**: quem tem o link entra. O link não aparece em nenhuma página do site, fica fora do `robots.txt` e a página tem `noindex`.
 - **Impossível de adivinhar**: o código tem 192 bits aleatórios. Ele é conferido **no servidor** (a API só guarda o hash SHA-256 dele, em `api/config.php`). Quem digita um código errado, ou `/gerenciar` sem código, vê a mesma página 404 de qualquer endereço inexistente.
-- **Para gerar (ou trocar) o link**: `npm run gerar-link -- https://www.seudominio.com.br`, depois `npm run build` e envie `dist/` de novo. O link é mostrado uma única vez; guarde-o num lugar seguro. Gerar de novo invalida o link anterior (use isso se ele vazar).
+- **Para gerar (ou trocar) o link**: `npm run gerar-link`, depois `npm run build` e envie `dist/` de novo. O link é mostrado uma única vez; guarde-o num lugar seguro. Gerar de novo invalida o link anterior (use isso se ele vazar).
 - **Cada alteração é salva na hora** no servidor e aparece para todos os clientes ao recarregar o site. Não precisa fazer build nem enviar arquivos para mudar o cardápio.
 - **Segurança de verdade**: o link funciona como uma chave. Quem o receber (ou quem o encontrar no histórico do navegador, num print ou numa mensagem encaminhada) consegue editar o cardápio. Compartilhe só com quem deve editar e troque o link se desconfiar de vazamento.
 - **Cópias de segurança**: o servidor guarda as últimas 30 versões em `api/data/history/` (arquivos `catalog-NNNNNN.json`; para voltar a uma, restaure-a pelo botão "Restaurar cópia" do editor). O editor também tem "Baixar cópia". Faça uma cópia antes de mudanças grandes.
