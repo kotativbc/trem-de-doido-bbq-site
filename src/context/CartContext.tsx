@@ -6,7 +6,7 @@ import { useCatalog } from "@/hooks/useCatalog";
 import { useSettings } from "@/hooks/useSettings";
 import { CART_STORAGE_KEY, loadCart, saveCart } from "@/services/cartStorage";
 import { getUnavailableReason } from "@/domain/availability";
-import { CartContext, type CartContextType, type PriceWithOptions, type ReorderLine } from "./cartContext";
+import { CartContext, type CartContextType, type PriceWithOptions, type ReorderLine } from "./cartContextValue";
 
 const EMPTY_CATALOG = { categories: [], products: [] };
 
