@@ -72,3 +72,28 @@
     background-color: hsl(43 96% 56%);
   }
 }
+
+/* Comanda do pedido: na impressão só o conteúdo de .print-area aparece. */
+.print-area {
+  display: none;
+}
+@media print {
+  body > *:not(.print-area) {
+    display: none !important;
+  }
+  .print-area {
+    display: block !important;
+    max-width: 80mm;
+    margin: 0 auto;
+    padding: 4mm;
+    background: #fff;
+    color: #000;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .print-area * {
+    color: #000 !important;
+    background: transparent !important;
+  }
+}
