@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
 import { useDialogBehavior } from "@/hooks/useDialogBehavior";
 import { couponsQueryKey } from "@/hooks/useCoupons";
-import { ordersQueryKey } from "@/hooks/useOrders";
+import { ordersQueryKey, useOrders } from "@/hooks/useOrders";
 import { useSettings } from "@/hooks/useSettings";
 import { repositories } from "@/services";
 import type { Order } from "@/domain/orders";
@@ -18,7 +18,9 @@ import WhatsAppBlockedNotice from "./WhatsAppBlockedNotice";
 import DrawerFooter from "./DrawerFooter";
 
 const CartDrawer = () => {
-  const { priced, totalItems, isCartOpen, setIsCartOpen, clearCart, increment, decrement, removeLine } = useCart();
+  const { priced, totalItems, isCartOpen, setIsCartOpen, clearCart, increment, decrement, removeLine, setLineNote, reorder } =
+    useCart();
+  const lastOrder = useOrders().data?.[0];
   const settings = useSettings();
   const [showCheckout, setShowCheckout] = useState(false);
   const [blocked, setBlocked] = useState<SubmittedOrder | null>(null);
@@ -133,6 +135,27 @@ const CartDrawer = () => {
                     <div className="flex flex-col items-center justify-center mt-16 gap-3">
                       <ShoppingCart className="h-12 w-12 text-[#333]" aria-hidden="true" />
                       <p className="text-[#666] text-sm">Sua sacola está vazia</p>
+                      {lastOrder && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="mt-2 border-[#2A2A2A] bg-[#1C1C1C] text-[#E5E5E5] hover:bg-[#2A2A2A] focus-visible:ring-2 focus-visible:ring-primary"
+                          onClick={() => {
+                            const { added, skipped } = reorder(
+                              lastOrder.lines.map((l) => ({
+                                productId: l.productId,
+                                quantity: l.quantity,
+                                addonOptionIds: l.addonOptionIds,
+                                note: l.note,
+                              })),
+                            );
+                            if (added === 0) toast.error("Nenhum item do último pedido está disponível agora.");
+                            else if (skipped > 0) toast.info("Alguns itens do último pedido não estão mais disponíveis.");
+                          }}
+                        >
+                          Pedir novamente o último pedido
+                        </Button>
+                      )}
                     </div>
                   ) : (
                     priced.lines.map((line) => (
@@ -142,6 +165,7 @@ const CartDrawer = () => {
                         onIncrement={increment}
                         onDecrement={decrement}
                         onRemove={removeLine}
+                        onNoteChange={setLineNote}
                       />
                     ))
                   )}

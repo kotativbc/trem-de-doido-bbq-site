@@ -1,146 +1,20 @@
-import { useState, useMemo, memo, useCallback } from "react";
-import { motion } from "framer-motion";
-import { Plus, Minus, Clock } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { useState, useMemo, useCallback } from "react";
+import { Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { siteContent } from "@/config/siteContent";
-import { getUnavailableReason, type UnavailableReason } from "@/domain/availability";
+import { hasAddonChoices } from "@/domain/addons";
+import { getUnavailableReason } from "@/domain/availability";
 import { visibleCategories, visibleProducts } from "@/domain/catalog";
-import { formatBRL } from "@/domain/money";
+import { emptyMenuFilters, hasActiveFilters, searchProducts, type MenuFilters } from "@/domain/search";
 import type { Product } from "@/domain/types";
-import { resolveProductImage } from "@/data/menuImages";
 import { useCart } from "@/hooks/useCart";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useFavorites } from "@/hooks/useFavorites";
 import { useSettings } from "@/hooks/useSettings";
-
-const unavailableLabel: Record<UnavailableReason, string> = {
-  removed: "Indisponível",
-  inactive: "Indisponível",
-  soldOut: "Esgotado",
-  sundayOnly: "Somente aos domingos",
-};
-
-interface MenuCardProps {
-  product: Product;
-  qty: number;
-  unavailableReason?: UnavailableReason;
-  onAdd: (productId: string) => void;
-  onRemove: (productId: string) => void;
-}
-
-const MenuCard = memo(({ product, qty, unavailableReason, onAdd, onRemove }: MenuCardProps) => {
-  const isMobile = useIsMobile();
-  const [expanded, setExpanded] = useState(false);
-  const image = resolveProductImage(product);
-  const canAdd = !unavailableReason;
-
-  const handleAdd = useCallback(() => onAdd(product.id), [onAdd, product.id]);
-  const handleRemove = useCallback(() => onRemove(product.id), [onRemove, product.id]);
-
-  const descriptionClasses = `text-muted-foreground text-sm mt-1 ${!expanded ? "line-clamp-2 md:line-clamp-none" : ""}`;
-
-  return (
-    <motion.div
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
-      className={`bg-[#111111] rounded-lg border ${product.sundayOnly ? "border-sunday" : "border-border/50"} flex flex-col justify-between hover:border-primary/50 transition-colors overflow-hidden`}
-    >
-      {image && (
-        <div className="w-full h-40 overflow-hidden">
-          <img
-            src={image}
-            alt={product.name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-            width={400}
-            height={160}
-          />
-        </div>
-      )}
-      <div className="p-4 flex flex-col flex-1">
-        <div>
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-['Bebas_Neue'] text-lg text-foreground tracking-wide">{product.name}</h3>
-            <div className="flex items-center gap-1 shrink-0">
-              {product.sundayOnly && <Badge variant="outline" className="border-sunday text-sunday text-xs">Especial</Badge>}
-              {product.badge && <Badge className="bg-green-600 text-primary-foreground text-xs">{product.badge}</Badge>}
-              {product.soldOut && <Badge variant="destructive" className="text-xs">Esgotado</Badge>}
-            </div>
-          </div>
-          {product.description &&
-            (isMobile ? (
-              // No celular a descrição é recolhida; vira botão para funcionar por teclado e leitor de tela.
-              <button
-                type="button"
-                className="block w-full text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
-                aria-expanded={expanded}
-                aria-label={`${expanded ? "Recolher" : "Expandir"} descrição de ${product.name}`}
-                onClick={() => setExpanded(!expanded)}
-              >
-                <span className={`${expanded ? "block " : ""}${descriptionClasses}`}>{product.description}</span>
-              </button>
-            ) : (
-              <p className={descriptionClasses}>{product.description}</p>
-            ))}
-        </div>
-
-        <div className="flex items-center justify-between mt-3">
-          <Badge className="bg-primary text-primary-foreground font-bold text-sm px-3">{formatBRL(product.priceCents)}</Badge>
-          {qty > 0 && (
-            <div className="flex items-center gap-2">
-              <Button
-                size="icon"
-                variant="outline"
-                className="h-8 w-8 border-border text-foreground focus-visible:ring-2 focus-visible:ring-primary"
-                onClick={handleRemove}
-                aria-label={`Remover ${product.name}`}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <span className="text-foreground font-bold w-6 text-center">{qty}</span>
-              <Button
-                size="icon"
-                className="h-8 w-8 bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary"
-                onClick={handleAdd}
-                disabled={!canAdd}
-                aria-label={`Adicionar mais ${product.name}`}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {qty === 0 && (
-          <motion.div whileTap={{ scale: 1.05 }} className="mt-3">
-            {unavailableReason ? (
-              <Button
-                variant="outline"
-                disabled
-                className="w-full border-border/50 bg-[#1A1A1A] text-muted-foreground font-medium"
-              >
-                {unavailableLabel[unavailableReason]}
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                className="w-full border-border/50 bg-[#1A1A1A] text-primary hover:bg-primary hover:text-primary-foreground font-medium focus-visible:ring-2 focus-visible:ring-primary"
-                onClick={handleAdd}
-                aria-label={`Adicionar ${product.name} ao carrinho`}
-              >
-                <Plus className="h-4 w-4 mr-1" /> Adicionar
-              </Button>
-            )}
-          </motion.div>
-        )}
-      </div>
-    </motion.div>
-  );
-});
-
-MenuCard.displayName = "MenuCard";
+import MenuCard from "./menu/MenuCard";
+import MenuFiltersBar from "./menu/MenuFiltersBar";
+import ProductOptionsDialog from "./menu/ProductOptionsDialog";
+import PromoBanner from "./PromoBanner";
 
 const MenuSkeleton = () => (
   <div
@@ -162,10 +36,15 @@ const MenuSkeleton = () => (
   </div>
 );
 
+const gridClasses = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4";
+
 const MenuSection = () => {
   const { catalog, isCatalogLoading, isCatalogError, retryCatalog, quantityOf, addItem, decrementProduct } = useCart();
   const settings = useSettings();
+  const { favoriteIds, isFavorite, toggle: toggleFavorite } = useFavorites();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [filters, setFilters] = useState<MenuFilters>(emptyMenuFilters);
+  const [optionsFor, setOptionsFor] = useState<Product | null>(null);
 
   const categories = useMemo(() => (catalog ? visibleCategories(catalog) : []), [catalog]);
 
@@ -182,13 +61,45 @@ const MenuSection = () => {
     [catalog, activeCategory],
   );
 
-  const handleAdd = useCallback((productId: string) => addItem(productId), [addItem]);
-
   const now = new Date();
+  const filtering = hasActiveFilters(filters);
+  const results = useMemo(
+    () => (catalog && filtering ? searchProducts(catalog, filters, { settings, now: new Date(), favoriteIds }) : null),
+    [catalog, filtering, filters, settings, favoriteIds],
+  );
+  const featured = useMemo(
+    () => (catalog ? visibleCategories(catalog).flatMap((c) => visibleProducts(catalog, c.id)).filter((p) => p.featured) : []),
+    [catalog],
+  );
+
+  const handleAdd = useCallback(
+    (productId: string) => {
+      const product = catalog?.products.find((p) => p.id === productId);
+      if (product && hasAddonChoices(product)) setOptionsFor(product);
+      else addItem(productId);
+    },
+    [catalog, addItem],
+  );
+
+  const renderCard = (product: Product) =>
+    catalog ? (
+      <MenuCard
+        key={product.id}
+        product={product}
+        qty={quantityOf(product.id)}
+        unavailableReason={getUnavailableReason(product, { settings, categories: catalog.categories, now })}
+        isFavorite={isFavorite(product.id)}
+        hasChoices={hasAddonChoices(product)}
+        onAdd={handleAdd}
+        onRemove={decrementProduct}
+        onToggleFavorite={toggleFavorite}
+      />
+    ) : null;
 
   return (
     <section id="cardapio" className="py-16">
       <div className="container mx-auto px-4">
+        <PromoBanner />
         <h2 className="font-['Bebas_Neue'] text-4xl md:text-5xl text-foreground text-center mb-8">CARDÁPIO</h2>
 
         {isCatalogError && !catalog ? (
@@ -202,49 +113,78 @@ const MenuSection = () => {
           <MenuSkeleton />
         ) : (
           <>
-            <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-none sticky top-16 bg-background/95 backdrop-blur-md z-30 py-3 -mx-4 px-4">
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-medium transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
-                    activeCategory === cat.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-[#1A1A1A] text-muted-foreground hover:text-foreground"
-                  }`}
-                  aria-pressed={activeCategory === cat.id}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
+            <MenuFiltersBar
+              filters={filters}
+              onChange={setFilters}
+              onClear={() => setFilters(emptyMenuFilters)}
+              resultCount={results ? results.length : null}
+            />
 
-            {activeCategoryData?.sundayOnly && (
-              <div className="flex items-center gap-2 mb-4 text-sunday">
-                <Clock className="h-5 w-5" aria-hidden="true" />
-                <span className="text-sm font-medium">Disponível somente aos domingos</span>
-              </div>
-            )}
-
-            {products.length === 0 ? (
-              <p className="text-muted-foreground text-center py-12">Nenhum item nesta categoria no momento.</p>
+            {results ? (
+              results.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <p className="text-muted-foreground">Nenhum item encontrado com esses filtros.</p>
+                  <Button variant="outline" onClick={() => setFilters(emptyMenuFilters)}>
+                    Limpar filtros
+                  </Button>
+                </div>
+              ) : (
+                <div className={gridClasses}>{results.map(renderCard)}</div>
+              )
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {products.map((product) => (
-                  <MenuCard
-                    key={product.id}
-                    product={product}
-                    qty={quantityOf(product.id)}
-                    unavailableReason={getUnavailableReason(product, { settings, categories: catalog.categories, now })}
-                    onAdd={handleAdd}
-                    onRemove={decrementProduct}
-                  />
-                ))}
-              </div>
+              <>
+                {featured.length > 0 && (
+                  <div className="mb-10">
+                    <h3 className="font-['Bebas_Neue'] text-2xl text-primary tracking-wide mb-4">DESTAQUES</h3>
+                    <div className={gridClasses}>{featured.map(renderCard)}</div>
+                  </div>
+                )}
+
+                <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-none sticky top-16 bg-background/95 backdrop-blur-md z-30 py-3 -mx-4 px-4">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-medium transition-colors shrink-0 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none ${
+                        activeCategory === cat.id
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-[#1A1A1A] text-muted-foreground hover:text-foreground"
+                      }`}
+                      aria-pressed={activeCategory === cat.id}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
+                {activeCategoryData?.sundayOnly && (
+                  <div className="flex items-center gap-2 mb-4 text-sunday">
+                    <Clock className="h-5 w-5" aria-hidden="true" />
+                    <span className="text-sm font-medium">Disponível somente aos domingos</span>
+                  </div>
+                )}
+
+                {products.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-12">Nenhum item nesta categoria no momento.</p>
+                ) : (
+                  <div className={gridClasses}>{products.map(renderCard)}</div>
+                )}
+              </>
             )}
           </>
         )}
       </div>
+
+      {optionsFor && (
+        <ProductOptionsDialog
+          product={optionsFor}
+          onClose={() => setOptionsFor(null)}
+          onConfirm={({ addonOptionIds, note, quantity }) => {
+            addItem(optionsFor.id, { addonOptionIds, note, quantity });
+            setOptionsFor(null);
+          }}
+        />
+      )}
     </section>
   );
 };

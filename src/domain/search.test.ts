@@ -37,4 +37,11 @@ describe("busca e filtros do cardápio", () => {
     const catalog = { ...seedCatalog, products: seedCatalog.products.map((p, i) => (i === 1 ? { ...p, active: false } : p)) };
     expect(searchProducts(catalog, emptyMenuFilters, ctx).some((p) => p.id === catalog.products[1].id)).toBe(false);
   });
+  it("'só favoritos' mantém apenas os ids favoritados", () => {
+    const favs = new Set(["h1", "be3"]);
+    const result = searchProducts(seedCatalog, { ...emptyMenuFilters, onlyFavorites: true }, { ...ctx, favoriteIds: favs });
+    expect(result.map((p) => p.id).sort()).toEqual(["be3", "h1"]);
+    expect(searchProducts(seedCatalog, { ...emptyMenuFilters, onlyFavorites: true }, ctx)).toHaveLength(0);
+    expect(hasActiveFilters({ ...emptyMenuFilters, onlyFavorites: true })).toBe(true);
+  });
 });

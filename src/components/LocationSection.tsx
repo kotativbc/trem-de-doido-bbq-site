@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
-import { MapPin, Clock, Phone, Instagram } from "lucide-react";
-import { instagramUrl, mapEmbedUrl, telUrl } from "@/config/business";
+import { MapPin, Clock, Phone, Instagram, Navigation, MessageCircle } from "lucide-react";
+import { instagramUrl, mapEmbedUrl, mapsDirectionsUrl, telUrl, whatsappChatUrl } from "@/config/business";
 import { describeClosedDays, describeOpeningHours } from "@/domain/hours";
 import { useSettings } from "@/hooks/useSettings";
 
@@ -107,6 +107,25 @@ const LocationSection = () => {
                 </div>
               </div>
             ))}
+
+            <div className="flex flex-wrap gap-3 pt-2">
+              <a
+                href={mapsDirectionsUrl(settings.mapsQuery)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
+              >
+                <Navigation className="h-4 w-4" aria-hidden="true" /> Como chegar
+              </a>
+              <a
+                href={whatsappChatUrl(settings.whatsappNumber)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-[#2A2A2A] bg-[#1A1A1A] px-4 py-2.5 text-sm font-semibold text-foreground hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden="true" /> Falar no WhatsApp
+              </a>
+            </div>
           </div>
         </div>
       </div>

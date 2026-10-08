@@ -22,12 +22,13 @@ export interface MenuFilters {
   query: string;
   priceBandId: string;
   onlyAvailable: boolean;
+  onlyFavorites: boolean;
 }
 
-export const emptyMenuFilters: MenuFilters = { query: "", priceBandId: "todas", onlyAvailable: false };
+export const emptyMenuFilters: MenuFilters = { query: "", priceBandId: "todas", onlyAvailable: false, onlyFavorites: false };
 
 export const hasActiveFilters = (f: MenuFilters): boolean =>
-  f.query.trim() !== "" || f.priceBandId !== "todas" || f.onlyAvailable;
+  f.query.trim() !== "" || f.priceBandId !== "todas" || f.onlyAvailable || f.onlyFavorites;
 
 const fold = (text: string): string =>
   text
@@ -39,7 +40,7 @@ const fold = (text: string): string =>
 export const searchProducts = (
   catalog: Catalog,
   filters: MenuFilters,
-  ctx: { settings: BusinessSettings; now: Date },
+  ctx: { settings: BusinessSettings; now: Date; favoriteIds?: ReadonlySet<string> },
 ): Product[] => {
   const terms = fold(filters.query).split(/\s+/).filter(Boolean);
   const band = PRICE_BANDS.find((b) => b.id === filters.priceBandId);
@@ -53,6 +54,7 @@ export const searchProducts = (
       if (band && (p.priceCents < band.minCents || (band.maxCents !== undefined && p.priceCents >= band.maxCents))) {
         return false;
       }
+      if (filters.onlyFavorites && !ctx.favoriteIds?.has(p.id)) return false;
       if (filters.onlyAvailable) {
         if (getUnavailableReason(p, { settings: ctx.settings, categories: catalog.categories, now: ctx.now })) return false;
       }

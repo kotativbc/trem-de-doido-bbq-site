@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Plus, Minus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { unavailableMessage } from "@/domain/availability";
@@ -9,19 +10,30 @@ interface CartLineRowProps {
   onIncrement: (lineId: string) => void;
   onDecrement: (lineId: string) => void;
   onRemove: (lineId: string) => void;
+  onNoteChange: (lineId: string, note: string) => void;
 }
 
-const CartLineRow = ({ line, onIncrement, onDecrement, onRemove }: CartLineRowProps) => {
+const NOTE_MAX = 200;
+
+const CartLineRow = ({ line, onIncrement, onDecrement, onRemove, onNoteChange }: CartLineRowProps) => {
   const unavailable = line.unavailableReason;
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(line.note);
+
+  const saveNote = () => {
+    setEditing(false);
+    if (draft.trim() !== line.note) onNoteChange(line.lineId, draft);
+  };
 
   return (
-    <div className="flex items-center justify-between bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg p-3">
+    <div className="bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg p-3">
+    <div className="flex items-center justify-between">
       <div className="flex-1 min-w-0">
         <p className="text-[#E5E5E5] text-sm font-medium truncate">{line.name}</p>
         {line.addonNames.length > 0 && (
           <p className="text-[#888] text-xs truncate">+ {line.addonNames.join(", ")}</p>
         )}
-        {line.note && <p className="text-[#888] text-xs truncate">Obs: {line.note}</p>}
+        {line.note && !editing && <p className="text-[#888] text-xs truncate">Obs: {line.note}</p>}
         {unavailable ? (
           <p className="text-red-400 text-xs" role="alert">
             {unavailableMessage[unavailable]} Remova para continuar.
@@ -64,6 +76,50 @@ const CartLineRow = ({ line, onIncrement, onDecrement, onRemove }: CartLineRowPr
           </>
         )}
       </div>
+    </div>
+
+    {!unavailable && (
+      <div className="mt-2">
+        {editing ? (
+          <div className="flex gap-2">
+            <label htmlFor={`note-${line.lineId}`} className="sr-only">Observação de {line.name}</label>
+            <input
+              id={`note-${line.lineId}`}
+              autoFocus
+              value={draft}
+              maxLength={NOTE_MAX}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={saveNote}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  saveNote();
+                }
+                if (e.key === "Escape") {
+                  // Escape fecha só o campo, não o carrinho inteiro.
+                  e.stopPropagation();
+                  setDraft(line.note);
+                  setEditing(false);
+                }
+              }}
+              placeholder="Sem cebola, ponto da carne…"
+              className="flex-1 min-w-0 rounded border border-[#2A2A2A] bg-[#0A0A0A] px-2 py-1 text-xs text-[#E5E5E5] placeholder:text-[#666] focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(line.note);
+              setEditing(true);
+            }}
+            className="text-xs text-primary/70 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded"
+          >
+            {line.note ? "Editar observação" : "+ Observação do item"}
+          </button>
+        )}
+      </div>
+    )}
     </div>
   );
 };
