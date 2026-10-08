@@ -1,3 +1,4 @@
+// CÓPIA CONGELADA do cardápio original (commit 55bf1e6). Não editar: serve de referência para os testes de paridade.
 export interface MenuItem {
   id: string;
   name: string;

@@ -2,10 +2,16 @@ import { memo, useCallback } from "react";
 import { Flame, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
+import { useSettings } from "@/hooks/useSettings";
+import { siteContent } from "@/config/siteContent";
 import { motion } from "framer-motion";
+
+const navLinkClass =
+  "text-sm text-muted-foreground hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded";
 
 const StickyHeader = memo(() => {
   const { totalItems, setIsCartOpen } = useCart();
+  const settings = useSettings();
 
   const scrollTo = useCallback((id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -16,13 +22,13 @@ const StickyHeader = memo(() => {
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <div className="flex items-center gap-2">
           <Flame className="h-6 w-6 text-primary" aria-hidden="true" />
-          <span className="font-['Bebas_Neue'] text-xl tracking-wider text-foreground">TREM DE DOIDO BBQ</span>
+          <span className="font-['Bebas_Neue'] text-xl tracking-wider text-foreground">{settings.name.toUpperCase()}</span>
         </div>
 
         <nav className="hidden md:flex items-center gap-6" aria-label="Navegação principal">
-          <button onClick={() => scrollTo("cardapio")} className="text-sm text-muted-foreground hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded">Cardápio</button>
-          <button onClick={() => scrollTo("localizacao")} className="text-sm text-muted-foreground hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded">Localização</button>
-          <button onClick={() => scrollTo("horarios")} className="text-sm text-muted-foreground hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded">Horários</button>
+          <button onClick={() => scrollTo("cardapio")} className={navLinkClass}>Cardápio</button>
+          <button onClick={() => scrollTo("localizacao")} className={navLinkClass}>Localização</button>
+          <button onClick={() => scrollTo("horarios")} className={navLinkClass}>Horários</button>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -30,7 +36,7 @@ const StickyHeader = memo(() => {
             onClick={() => scrollTo("cardapio")}
             className="hidden md:flex animate-pulse-flame bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary"
           >
-            Faça seu Pedido
+            {siteContent.hero.cta}
           </Button>
           <button
             onClick={() => setIsCartOpen(true)}

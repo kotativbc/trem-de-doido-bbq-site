@@ -3,6 +3,8 @@ import { useRef, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import heroBg from "@/assets/hero-bbq.jpg";
+import { siteContent } from "@/config/siteContent";
+import { useSettings } from "@/hooks/useSettings";
 
 export const SmokeButton = ({ onClick, children, className = "" }: { onClick?: () => void; children: React.ReactNode; className?: string }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -30,6 +32,8 @@ export const SmokeButton = ({ onClick, children, className = "" }: { onClick?: (
 };
 
 const HeroSection = () => {
+  const settings = useSettings();
+  const { hero } = siteContent;
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
@@ -43,7 +47,7 @@ const HeroSection = () => {
       <motion.div style={{ y }} className="absolute inset-0">
         <img
           src={heroBg}
-          alt="BBQ defumado no estilo American Barbecue"
+          alt={hero.imageAlt}
           className="w-full h-full object-cover"
           width={1920}
           height={1080}
@@ -60,7 +64,7 @@ const HeroSection = () => {
           transition={{ duration: 0.8 }}
           className="text-5xl md:text-7xl lg:text-8xl font-['Bebas_Neue'] text-foreground leading-none"
         >
-          O VERDADEIRO <span className="text-primary">AMERICAN BBQ</span>
+          {hero.titlePrefix} <span className="text-primary">{hero.titleHighlight}</span>
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
@@ -68,7 +72,7 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="text-2xl md:text-4xl font-['Bebas_Neue'] text-foreground mt-2"
         >
-          COM O TEMPERO DE MINAS
+          {hero.subtitle}
         </motion.p>
         <motion.p
           initial={{ opacity: 0 }}
@@ -76,7 +80,7 @@ const HeroSection = () => {
           transition={{ delay: 0.5 }}
           className="text-muted-foreground mt-4 text-sm md:text-base max-w-md"
         >
-          Comandado pelo Chef Edmundo Leitão em Sarzedo/MG
+          {hero.byline} em {settings.city}
         </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -88,7 +92,7 @@ const HeroSection = () => {
             onClick={() => scrollTo("cardapio")}
             className="mt-8 bg-primary text-primary-foreground hover:bg-primary/90 text-lg px-8 py-6 animate-pulse-flame"
           >
-            Faça seu Pedido
+            {hero.cta}
           </SmokeButton>
           <motion.div
             animate={{ y: [0, 8, 0] }}

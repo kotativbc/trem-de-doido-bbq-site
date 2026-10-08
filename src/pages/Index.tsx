@@ -8,7 +8,7 @@ import LocationSection from "@/components/LocationSection";
 import FooterSection from "@/components/FooterSection";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import MobileCartBar from "@/components/MobileCartBar";
-import CartDrawer from "@/components/CartDrawer";
+import CartDrawer from "@/components/cart/CartDrawer";
 
 const Index = () => (
   <CartProvider>

@@ -1,10 +1,11 @@
 import { memo } from "react";
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatBRL } from "@/domain/money";
 import { useCart } from "@/hooks/useCart";
 
 const MobileCartBar = memo(() => {
-  const { totalItems, totalPrice, setIsCartOpen } = useCart();
+  const { totalItems, subtotalCents, setIsCartOpen } = useCart();
 
   if (totalItems === 0) return null;
 
@@ -16,13 +17,13 @@ const MobileCartBar = memo(() => {
       <Button
         className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-12 flex items-center justify-between px-4 rounded-xl shadow-lg focus-visible:ring-2 focus-visible:ring-primary"
         onClick={() => setIsCartOpen(true)}
-        aria-label={`Ver sacola com ${totalItems} itens, total R$ ${totalPrice.toFixed(2).replace(".", ",")}`}
+        aria-label={`Ver sacola com ${totalItems} itens, total ${formatBRL(subtotalCents)}`}
       >
         <span className="flex items-center gap-2">
           <ShoppingCart className="h-5 w-5" />
           <span className="font-bold">{totalItems} {totalItems === 1 ? "item" : "itens"}</span>
         </span>
-        <span className="font-bold">R$ {totalPrice.toFixed(2).replace(".", ",")}</span>
+        <span className="font-bold">{formatBRL(subtotalCents)}</span>
       </Button>
     </div>
   );

@@ -56,7 +56,7 @@ Severidade: **A** = quebra uso real, **M** = degrada qualidade/acessibilidade, *
 
 ### 1.3 O que está certo e deve ser preservado
 
-Identidade visual (tokens HSL em `index.css`, Bebas Neue + DM Sans), ordem das seções, parallax e animações do Hero, hover/tap nos cards, badges dourado "Especial" e verde "Novo", descrição truncada no mobile, contador no header, `MobileBottomNav` + `MobileCartBar`, `safe-area-inset-bottom`, formato exato da mensagem de WhatsApp (ver 4.4), 32 imagens de produto + hero + pitmaster em `src/assets`.
+Identidade visual (tokens HSL em `index.css`, Bebas Neue + DM Sans), ordem das seções, parallax e animações do Hero, hover/tap nos cards, badges dourado "Especial" e verde "Novo", descrição truncada no mobile, contador no header, `MobileBottomNav` + `MobileCartBar`, `safe-area-inset-bottom`, formato exato da mensagem de WhatsApp (ver 4.4), 33 imagens de produto + hero + pitmaster em `src/assets`.
 
 ---
 
@@ -90,8 +90,8 @@ Estado: `CartContext` (itens, abrir/fechar drawer) é o único estado global. To
 
 | Origem | Conteúdo |
 |---|---|
-| `data/menuData.ts` | `MenuItem {id, name, description, price:number, category, badge?}`; 7 categorias (id, label com emoji, icon); **31 produtos** (d1-d4, h1-h8, c1-c3, e1-e4, b1-b7, a1-a2, be1-be5). |
-| `data/menuImages.ts` | `Record<id, url>` com 31 imagens. Bebidas e produtos sem descrição usam `description: ""`. |
+| `data/menuData.ts` | `MenuItem {id, name, description, price:number, category, badge?}`; 7 categorias (id, label com emoji, icon); **33 produtos** (d1-d4, h1-h8, c1-c3, e1-e4, b1-b7, a1-a2, be1-be5). |
+| `data/menuImages.ts` | `Record<id, url>` com 33 imagens. Bebidas e produtos sem descrição usam `description: ""`. |
 | `context/CartContext.tsx` | `CartItem {id, name, price, qty, category}`, ações `addItem/removeItem/clearCart`, totais, flags do drawer. |
 | Hardcoded nos componentes | WhatsApp, endereço, horário, telefone, Instagram, nome, textos do Hero/Pitmaster, reviews, crédito do dev, URL do embed do Maps. |
 

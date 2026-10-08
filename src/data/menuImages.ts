@@ -48,3 +48,7 @@ export const menuImages: Record<string, string> = {
   a1, a2,
   be1, be2, be3, be4, be5,
 };
+
+/** Imagem de um produto: a enviada pelo admin ou, se não houver, a que já vem no projeto. */
+export const resolveProductImage = (product: { imageUrl?: string; imageKey?: string }): string | undefined =>
+  product.imageUrl ?? (product.imageKey ? menuImages[product.imageKey] : undefined);
