@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { toast } from "sonner";
-import { cartReducer, quantityOfProduct } from "@/domain/cart";
+import { cartReducer, makeLineId, quantityOfProduct } from "@/domain/cart";
 import { priceCart } from "@/domain/pricing";
 import { useCatalog } from "@/hooks/useCatalog";
 import { useSettings } from "@/hooks/useSettings";
 import { CART_STORAGE_KEY, loadCart, saveCart } from "@/services/cartStorage";
-import { CartContext, type CartContextType } from "./cartContext";
+import { getUnavailableReason } from "@/domain/availability";
+import { CartContext, type CartContextType, type PriceWithOptions, type ReorderLine } from "./cartContext";
 
 const EMPTY_CATALOG = { categories: [], products: [] };
 
@@ -50,6 +51,30 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [lines, catalog, settings],
   );
 
+  const priceWith = useCallback(
+    (options: PriceWithOptions) =>
+      priceCart(lines, catalog ?? EMPTY_CATALOG, { settings, now: new Date(), ...options }),
+    [lines, catalog, settings],
+  );
+
+  const reorder = useCallback(
+    (wanted: ReorderLine[]) => {
+      if (!catalog) return { added: 0, skipped: wanted.length };
+      const now = new Date();
+      const next = wanted.flatMap((w) => {
+        const product = catalog.products.find((p) => p.id === w.productId);
+        if (!product || getUnavailableReason(product, { settings, categories: catalog.categories, now })) return [];
+        // Só mantém adicionais que ainda existem no produto.
+        const valid = new Set(product.addonGroups.flatMap((g) => g.options.map((o) => o.id)));
+        const addonOptionIds = w.addonOptionIds.filter((id) => valid.has(id));
+        return [{ lineId: makeLineId(w.productId, addonOptionIds, w.note), productId: w.productId, quantity: w.quantity, addonOptionIds, note: w.note }];
+      });
+      dispatch({ type: "replace", lines: next });
+      return { added: next.length, skipped: wanted.length - next.length };
+    },
+    [catalog, settings],
+  );
+
   const addItem = useCallback<CartContextType["addItem"]>(
     (productId, options) => dispatch({ type: "add", productId, ...options }),
     [],
@@ -72,6 +97,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isCatalogLoading: catalogQuery.isLoading,
       isCatalogError: catalogQuery.isError,
       retryCatalog,
+      priceWith,
+      lines,
+      reorder,
       quantityOf,
       addItem,
       decrementProduct,
@@ -89,6 +117,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       catalogQuery.isLoading,
       catalogQuery.isError,
       retryCatalog,
+      priceWith,
+      lines,
+      reorder,
       quantityOf,
       addItem,
       decrementProduct,

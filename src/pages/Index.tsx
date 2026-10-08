@@ -1,4 +1,3 @@
-import { CartProvider } from "@/context/CartContext";
 import StickyHeader from "@/components/StickyHeader";
 import HeroSection from "@/components/HeroSection";
 import SocialProof from "@/components/SocialProof";
@@ -11,20 +10,18 @@ import MobileCartBar from "@/components/MobileCartBar";
 import CartDrawer from "@/components/cart/CartDrawer";
 
 const Index = () => (
-  <CartProvider>
-    <div className="min-h-screen bg-background pb-[80px] md:pb-0">
-      <StickyHeader />
-      <HeroSection />
-      <SocialProof />
-      <MenuSection />
-      <PitmasterSection />
-      <LocationSection />
-      <FooterSection />
-      <CartDrawer />
-      <MobileCartBar />
-      <MobileBottomNav />
-    </div>
-  </CartProvider>
+  <div className="min-h-screen bg-background pb-[80px] md:pb-0">
+    <StickyHeader />
+    <HeroSection />
+    <SocialProof />
+    <MenuSection />
+    <PitmasterSection />
+    <LocationSection />
+    <FooterSection />
+    <CartDrawer />
+    <MobileCartBar />
+    <MobileBottomNav />
+  </div>
 );
 
 export default Index;

@@ -18,18 +18,23 @@ export interface PriceOptions {
 }
 
 /** Preço de uma unidade: produto + adicionais escolhidos que realmente existem no produto. */
-export const unitPrice = (product: Product, addonOptionIds: string[]): { cents: Cents; names: string[] } => {
+export const unitPrice = (
+  product: Product,
+  addonOptionIds: string[],
+): { cents: Cents; names: string[]; ids: string[] } => {
   let cents = product.priceCents;
   const names: string[] = [];
+  const ids: string[] = [];
   for (const group of product.addonGroups) {
     for (const option of group.options) {
       if (addonOptionIds.includes(option.id)) {
         cents += option.priceCents;
         names.push(option.name);
+        ids.push(option.id);
       }
     }
   }
-  return { cents, names };
+  return { cents, names, ids };
 };
 
 export const priceCart = (lines: CartLine[], catalog: Catalog, options: PriceOptions): PricedCart => {
@@ -49,12 +54,13 @@ export const priceCart = (lines: CartLine[], catalog: Catalog, options: PriceOpt
         unitCents: 0,
         totalCents: 0,
         addonNames: [],
+        addonOptionIds: [],
         note: line.note,
         unavailableReason,
       };
     }
 
-    const { cents, names } = unitPrice(product, line.addonOptionIds);
+    const { cents, names, ids } = unitPrice(product, line.addonOptionIds);
     return {
       lineId: line.lineId,
       productId: line.productId,
@@ -63,6 +69,7 @@ export const priceCart = (lines: CartLine[], catalog: Catalog, options: PriceOpt
       unitCents: cents,
       totalCents: cents * line.quantity,
       addonNames: names,
+      addonOptionIds: ids,
       note: line.note,
       unavailableReason,
     };

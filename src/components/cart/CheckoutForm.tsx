@@ -1,12 +1,13 @@
-import { useMemo } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Controller, useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { MapPin, Send } from "lucide-react";
+import { Clock, MapPin, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { applyCoupon } from "@/domain/coupons";
 import {
   createCheckoutSchema,
   emptyCheckoutValues,
@@ -14,33 +15,51 @@ import {
   paymentOptions,
   type CheckoutValues,
 } from "@/domain/checkout";
+import { estimateTimeText, getMinOrderShortfall, resolveDeliveryFee } from "@/domain/delivery";
+import { getOpenStatus } from "@/domain/hours";
 import { formatBRL } from "@/domain/money";
+import { buildOrder, generateOrderId, type Order } from "@/domain/orders";
+import { formatPhoneBR } from "@/domain/phone";
 import type { BusinessSettings } from "@/domain/settings";
 import type { PricedCart } from "@/domain/types";
 import { buildOrderMessage, buildWhatsAppUrl } from "@/domain/whatsapp";
+import { useBeforeUnloadWarning } from "@/hooks/useBeforeUnloadWarning";
+import { useCart } from "@/hooks/useCart";
+import { useCoupons } from "@/hooks/useCoupons";
+import AddressFields from "./AddressFields";
+import CouponField from "./CouponField";
 import DrawerFooter from "./DrawerFooter";
+import FieldError from "./FieldError";
+import { inputClasses, labelClasses } from "./fieldStyles";
 
-const inputClasses = "bg-[#1C1C1C] border-[#2A2A2A] text-[#E5E5E5] placeholder:text-[#666] rounded-lg focus-visible:ring-primary";
-const labelClasses = "text-[#E5E5E5] text-xs font-semibold uppercase tracking-wide";
-
-const FieldError = ({ id, message }: { id: string; message?: string }) =>
-  message ? (
-    <p id={id} className="text-xs text-red-400" role="alert">
-      {message}
-    </p>
-  ) : null;
+export interface SubmittedOrder {
+  order: Order;
+  whatsappUrl: string;
+  /** false quando o navegador bloqueou a nova janela. */
+  opened: boolean;
+}
 
 interface CheckoutFormProps {
   priced: PricedCart;
   settings: BusinessSettings;
   onBack: () => void;
   onAddMore: () => void;
-  /** Chamado depois que o WhatsApp foi aberto com a mensagem do pedido. */
-  onSent: () => void;
+  /** Chamado depois de tentar abrir o WhatsApp com a mensagem do pedido. */
+  onSubmitted: (result: SubmittedOrder) => void;
 }
 
-const CheckoutForm = ({ priced, settings, onBack, onAddMore, onSent }: CheckoutFormProps) => {
-  const schema = useMemo(() => createCheckoutSchema({ totalCents: priced.totalCents }), [priced.totalCents]);
+const CheckoutForm = ({ priced, settings, onBack, onAddMore, onSubmitted }: CheckoutFormProps) => {
+  const { priceWith } = useCart();
+  const couponsQuery = useCoupons();
+  const deliveryEnabled = settings.delivery.enabled;
+
+  // O total depende de taxa e cupom (que dependem do que o cliente digita); o resolver lê o total mais recente.
+  const totalRef = useRef(priced.totalCents);
+  const resolver = useMemo<Resolver<CheckoutValues>>(
+    () => (values, context, options) =>
+      zodResolver(createCheckoutSchema({ totalCents: totalRef.current }))(values, context, options),
+    [],
+  );
 
   const {
     register,
@@ -48,29 +67,100 @@ const CheckoutForm = ({ priced, settings, onBack, onAddMore, onSent }: CheckoutF
     handleSubmit,
     watch,
     setValue,
-    formState: { errors, isValid },
+    trigger,
+    formState: { errors, isValid, isDirty },
   } = useForm<CheckoutValues>({
-    resolver: zodResolver(schema),
-    defaultValues: emptyCheckoutValues,
+    resolver,
+    defaultValues: { ...emptyCheckoutValues, fulfillment: deliveryEnabled ? "entrega" : "retirada" },
     mode: "onTouched",
   });
 
   const fulfillment = watch("fulfillment");
   const payment = watch("payment");
+  const neighborhood = watch("neighborhood");
+  const changeFor = watch("changeFor");
   const isPickup = fulfillment === "retirada";
-  const hasBlockedLines = priced.lines.some((l) => l.unavailableReason);
-  const canSubmit = isValid && priced.subtotalCents > 0 && !hasBlockedLines;
 
-  const onSubmit = (values: CheckoutValues) => {
-    const message = buildOrderMessage({ settings, cart: priced, values });
-    window.open(buildWhatsAppUrl(settings.whatsappNumber, message), "_blank");
-    onSent();
+  const [appliedCode, setAppliedCode] = useState("");
+  const now = new Date();
+
+  const subtotalCents = priced.subtotalCents;
+  const couponResult = useMemo(
+    () =>
+      appliedCode
+        ? applyCoupon(couponsQuery.data ?? [], appliedCode, subtotalCents, now, settings.timezone, formatBRL)
+        : null,
+    // `now` muda a cada render; o cupom só precisa ser reavaliado quando algo relevante muda.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [appliedCode, couponsQuery.data, subtotalCents, settings.timezone],
+  );
+
+  const fee = resolveDeliveryFee(settings.delivery, fulfillment, neighborhood);
+  const quote = priceWith({
+    deliveryFeeCents: fee.feeCents,
+    discountCents: couponResult?.ok ? couponResult.discountCents : 0,
+  });
+  totalRef.current = quote.totalCents;
+
+  // O troco precisa cobrir o total: revalida quando o total muda (cupom, bairro, modalidade).
+  useEffect(() => {
+    if (changeFor.trim() !== "") void trigger("changeFor");
+  }, [quote.totalCents, changeFor, trigger]);
+
+  useBeforeUnloadWarning(isDirty);
+
+  const openStatus = getOpenStatus(settings, now);
+  const closedBlocksOrder = !openStatus.open && !settings.ordering.allowOrdersWhenClosed;
+  const shortfall = getMinOrderShortfall(settings.delivery, fulfillment, quote.subtotalCents);
+  const hasBlockedLines = quote.lines.some((l) => l.unavailableReason);
+  const canSubmit = isValid && quote.subtotalCents > 0 && !hasBlockedLines && !closedBlocksOrder && shortfall === 0;
+
+  const orderIdRef = useRef(generateOrderId());
+  const estimate = estimateTimeText(settings.delivery, fulfillment);
+  const showBreakdown = quote.discountCents > 0 || quote.deliveryFeeCents > 0 || fee.zoneName !== undefined;
+  const availableFulfillment = fulfillmentOptions.filter((o) => deliveryEnabled || o.value === "retirada");
+
+  const onSubmit = (raw: CheckoutValues) => {
+    // O telefone sempre sai formatado, mesmo que o cliente não tenha saído do campo antes de enviar.
+    const values = { ...raw, phone: formatPhoneBR(raw.phone) };
+    const couponCode = couponResult?.ok ? couponResult.coupon.code : undefined;
+    const message = buildOrderMessage({
+      settings,
+      cart: quote,
+      values,
+      extras: { orderId: orderIdRef.current, couponCode, estimate },
+    });
+    const whatsappUrl = buildWhatsAppUrl(settings.whatsappNumber, message);
+    // window.open precisa rodar dentro do clique para não ser bloqueado como pop-up.
+    const opened = window.open(whatsappUrl, "_blank") !== null;
+    const order = buildOrder({
+      id: orderIdRef.current,
+      now: new Date(),
+      values,
+      cart: quote,
+      couponCode,
+      estimate,
+      whatsappMessage: message,
+    });
+    onSubmitted({ order, whatsappUrl, opened });
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col flex-1 min-h-0">
       <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-4 space-y-4 pb-32">
         <div className="space-y-5">
+          {!openStatus.open && (
+            <div role="alert" className="flex gap-2 rounded-lg border border-amber-700/50 bg-amber-950/30 p-3 text-sm text-amber-300">
+              <Clock className="h-4 w-4 mt-0.5 shrink-0" aria-hidden="true" />
+              <p>
+                {closedBlocksOrder
+                  ? "Estamos fechados no momento e não é possível enviar pedidos agora."
+                  : "Estamos fechados no momento. Você pode enviar o pedido, mas ele só será atendido quando abrirmos."}
+                {openStatus.nextOpening ? ` Abrimos ${openStatus.nextOpening}.` : ""}
+              </p>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <Label htmlFor="checkout-name" className={labelClasses}>Nome *</Label>
             <Input
@@ -85,10 +175,26 @@ const CheckoutForm = ({ priced, settings, onBack, onAddMore, onSent }: CheckoutF
             <FieldError id="checkout-name-error" message={errors.name?.message} />
           </div>
 
+          <div className="space-y-1.5">
+            <Label htmlFor="checkout-phone" className={labelClasses}>Telefone / WhatsApp *</Label>
+            <Input
+              id="checkout-phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel-national"
+              placeholder="(31) 99999-9999"
+              className={inputClasses}
+              aria-invalid={!!errors.phone}
+              aria-describedby={errors.phone ? "checkout-phone-error" : undefined}
+              {...register("phone", { onBlur: (e) => setValue("phone", formatPhoneBR(e.target.value)) })}
+            />
+            <FieldError id="checkout-phone-error" message={errors.phone?.message} />
+          </div>
+
           <div className="space-y-2" role="group" aria-labelledby="checkout-fulfillment-label">
             <span id="checkout-fulfillment-label" className={`${labelClasses} block`}>Tipo de Entrega *</span>
-            <div className="grid grid-cols-2 gap-2">
-              {fulfillmentOptions.map((opt) => {
+            <div className={`grid gap-2 ${availableFulfillment.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+              {availableFulfillment.map((opt) => {
                 const active = fulfillment === opt.value;
                 return (
                   <button
@@ -108,22 +214,23 @@ const CheckoutForm = ({ priced, settings, onBack, onAddMore, onSent }: CheckoutF
                 );
               })}
             </div>
+            {!deliveryEnabled && (
+              <p className="text-xs text-[#888]">No momento atendemos apenas retirada no balcão.</p>
+            )}
           </div>
 
           {!isPickup && (
-            <div className="space-y-1.5">
-              <Label htmlFor="checkout-address" className={labelClasses}>Endereço de Entrega *</Label>
-              <Input
-                id="checkout-address"
-                autoComplete="street-address"
-                placeholder="Rua, número, bairro"
-                className={inputClasses}
-                aria-invalid={!!errors.address}
-                aria-describedby={errors.address ? "checkout-address-error" : undefined}
-                {...register("address")}
-              />
-              <FieldError id="checkout-address-error" message={errors.address?.message} />
-            </div>
+            <AddressFields
+              register={register}
+              setValue={setValue}
+              errors={errors}
+              zones={settings.delivery.zones}
+              serviceAreaText={settings.delivery.serviceAreaText}
+              cep={watch("cep")}
+              address={watch("address")}
+              neighborhood={neighborhood}
+              locationUrl={watch("locationUrl")}
+            />
           )}
 
           <div className="space-y-2" role="group" aria-labelledby="checkout-payment-label">
@@ -152,6 +259,7 @@ const CheckoutForm = ({ priced, settings, onBack, onAddMore, onSent }: CheckoutF
                 </RadioGroup>
               )}
             />
+            <p className="text-xs text-[#888]">O pagamento é combinado na entrega ou retirada; não cobramos nada pelo site.</p>
           </div>
 
           {payment === "dinheiro" && (
@@ -167,11 +275,18 @@ const CheckoutForm = ({ priced, settings, onBack, onAddMore, onSent }: CheckoutF
                 {...register("changeFor")}
               />
               <p id="checkout-change-hint" className="text-xs text-[#888]">
-                Deixe em branco se não precisar de troco. Total do pedido: {formatBRL(priced.totalCents)}.
+                Deixe em branco se não precisar de troco. Total do pedido: {formatBRL(quote.totalCents)}.
               </p>
               <FieldError id="checkout-change-error" message={errors.changeFor?.message} />
             </div>
           )}
+
+          <CouponField
+            appliedCode={appliedCode}
+            result={couponResult}
+            onApply={(code) => setAppliedCode(code)}
+            onRemove={() => setAppliedCode("")}
+          />
 
           <div className="space-y-1.5">
             <Label htmlFor="checkout-notes" className={labelClasses}>Observações</Label>
@@ -189,17 +304,44 @@ const CheckoutForm = ({ priced, settings, onBack, onAddMore, onSent }: CheckoutF
 
           <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-4 space-y-2">
             <span className="text-[#888] text-xs font-medium uppercase tracking-wide">Resumo:</span>
-            {priced.lines.map((line) => (
+            {quote.lines.map((line) => (
               <div key={line.lineId} className="flex justify-between text-sm">
                 <span className="text-[#AAA]">{line.name} x{line.quantity}</span>
                 <span className="text-[#E5E5E5]">{formatBRL(line.totalCents)}</span>
               </div>
             ))}
+            {showBreakdown && (
+              <dl className="border-t border-[#2A2A2A] pt-2 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-[#AAA]">Subtotal</dt>
+                  <dd className="text-[#E5E5E5]">{formatBRL(quote.subtotalCents)}</dd>
+                </div>
+                {quote.discountCents > 0 && (
+                  <div className="flex justify-between">
+                    <dt className="text-green-400">Desconto</dt>
+                    <dd className="text-green-400">- {formatBRL(quote.discountCents)}</dd>
+                  </div>
+                )}
+                {(quote.deliveryFeeCents > 0 || fee.zoneName !== undefined) && (
+                  <div className="flex justify-between">
+                    <dt className="text-[#AAA]">Taxa de entrega</dt>
+                    <dd className="text-[#E5E5E5]">{quote.deliveryFeeCents > 0 ? formatBRL(quote.deliveryFeeCents) : "Grátis"}</dd>
+                  </div>
+                )}
+              </dl>
+            )}
+            <p className="text-xs text-[#888] pt-1">Previsão: {estimate}</p>
           </div>
+
+          {shortfall > 0 && (
+            <p role="alert" className="text-sm text-amber-400">
+              Pedido mínimo para entrega: {formatBRL(settings.delivery.minOrderCents)}. Faltam {formatBRL(shortfall)} em itens, ou escolha retirar no balcão.
+            </p>
+          )}
         </div>
       </div>
 
-      <DrawerFooter totalCents={priced.totalCents}>
+      <DrawerFooter totalCents={quote.totalCents}>
         <div className="space-y-2">
           <Button
             type="submit"

@@ -15,7 +15,7 @@ const getStorage = (): Storage | null => {
   }
 };
 
-export const readJson = <T>(key: string, schema: z.ZodType<T>): T | null => {
+export const readJson = <S extends z.ZodTypeAny>(key: string, schema: S): z.output<S> | null => {
   const storage = getStorage();
   if (!storage) return null;
 

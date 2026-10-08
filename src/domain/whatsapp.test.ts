@@ -101,4 +101,62 @@ describe("mensagem de WhatsApp", () => {
     expect(url.startsWith("https://wa.me/5531997036657?text=")).toBe(true);
     expect(decodeURIComponent(url.split("text=")[1])).toBe("Olá & tudo bem?\nLinha 2");
   });
+
+  describe("detalhes adicionados (nunca alteram o esqueleto original)", () => {
+    const delivered = (patch: Partial<CheckoutValues>) => values({ address: "Rua A, 10", ...patch });
+
+    it("telefone, complemento, bairro, CEP, referência e localização entram só quando preenchidos", () => {
+      const message = buildOrderMessage({
+        settings,
+        cart: cart([{ productId: "h1", quantity: 1 }]),
+        values: delivered({
+          phone: "(31) 99703-6657",
+          complement: "apto 2",
+          neighborhood: "Centro",
+          cep: "32450-000",
+          reference: "portão azul",
+          locationUrl: "https://www.google.com/maps?q=-20.1,-44.1",
+        }),
+      });
+      expect(message).toContain("👤 *Cliente:* Samuel\n📞 *Telefone:* (31) 99703-6657");
+      expect(message).toContain("📍 *Endereço:* Rua A, 10, apto 2 - Centro (CEP 32450-000)");
+      expect(message).toContain("🧭 *Referência:* portão azul");
+      expect(message).toContain("🗺️ *Localização:* https://www.google.com/maps?q=-20.1,-44.1");
+    });
+
+    it("na retirada não vaza referência nem localização", () => {
+      const message = buildOrderMessage({
+        settings,
+        cart: cart([{ productId: "h1", quantity: 1 }]),
+        values: values({ fulfillment: "retirada", reference: "x", locationUrl: "https://y" }),
+      });
+      expect(message).not.toContain("Referência");
+      expect(message).not.toContain("Localização");
+    });
+
+    it("mostra subtotal, desconto (com cupom) e taxa quando existem, e o total os inclui", () => {
+      const priced = priceCart([{ lineId: "a", productId: "h1", quantity: 2, addonOptionIds: [], note: "" }], catalog, {
+        settings,
+        now: SP.wed19h,
+        discountCents: 700,
+        deliveryFeeCents: 500,
+      });
+      const message = buildOrderMessage({
+        settings,
+        cart: priced,
+        values: delivered({}),
+        extras: { couponCode: "BEMVINDO10", orderId: "TDD-ABC123", estimate: "40 a 60 min" },
+      });
+      expect(message).toContain("🔥 NOVO PEDIDO — TREM DE DOIDO BBQ 🔥\n🧾 *Pedido:* TDD-ABC123");
+      expect(message).toContain("⏱️ *Previsão:* 40 a 60 min");
+      expect(message).toContain(
+        "🧾 *Subtotal:* R$ 73,80\n🏷️ *Desconto (BEMVINDO10):* - R$ 7,00\n🛵 *Taxa de entrega:* R$ 5,00\n💰 *TOTAL:* R$ 71,80",
+      );
+    });
+
+    it("sem desconto nem taxa não há bloco de subtotal", () => {
+      const message = buildOrderMessage({ settings, cart: cart([{ productId: "h1", quantity: 1 }]), values: delivered({}) });
+      expect(message).not.toContain("Subtotal");
+    });
+  });
 });

@@ -81,6 +81,8 @@ export interface PricedLine {
   unitCents: Cents;
   totalCents: Cents;
   addonNames: string[];
+  /** Ids das opções escolhidas que ainda existem no produto (usado em "pedir novamente"). */
+  addonOptionIds: string[];
   note: string;
   /** Preenchido quando o item não pode ser pedido agora. */
   unavailableReason?: "removed" | "inactive" | "soldOut" | "sundayOnly";

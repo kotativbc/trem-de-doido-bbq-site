@@ -5,13 +5,18 @@ const schema = createCheckoutSchema({ totalCents: 7380 });
 const valid: CheckoutValues = {
   ...emptyCheckoutValues,
   name: "Samuel",
-  address: "Rua A, 10, Centro",
+  phone: "(31) 99703-6657",
+  address: "Rua A, 10",
+  neighborhood: "Centro",
 };
 
 const errorsOf = (values: CheckoutValues): Record<string, string> => {
   const result = schema.safeParse(values);
   if (result.success) return {};
-  return Object.fromEntries(result.error.issues.map((i) => [String(i.path[0]), i.message]));
+  // O formulário mostra a primeira mensagem de cada campo.
+  const first: Record<string, string> = {};
+  for (const i of result.error.issues) first[String(i.path[0])] ??= i.message;
+  return first;
 };
 
 describe("validação do checkout", () => {
@@ -58,5 +63,29 @@ describe("validação do checkout", () => {
   it("limita o tamanho dos textos", () => {
     expect(errorsOf({ ...valid, name: "a".repeat(81) }).name).toMatch(/80/);
     expect(errorsOf({ ...valid, notes: "a".repeat(501) }).notes).toMatch(/500/);
+  });
+
+  describe("telefone, bairro e CEP", () => {
+    it("telefone é obrigatório e precisa ser brasileiro válido", () => {
+      expect(errorsOf({ ...valid, phone: "" }).phone).toBe("Informe seu telefone com DDD.");
+      expect(errorsOf({ ...valid, phone: "12345" }).phone).toMatch(/Telefone inválido/);
+      expect(schema.safeParse({ ...valid, phone: "31997036657" }).success).toBe(true);
+    });
+    it("telefone também vale para retirada", () => {
+      expect(errorsOf({ ...valid, fulfillment: "retirada", phone: "" }).phone).toBeDefined();
+    });
+    it("entrega exige bairro; retirada não", () => {
+      expect(errorsOf({ ...valid, neighborhood: "" }).neighborhood).toBe("Informe o bairro.");
+      expect(schema.safeParse({ ...valid, fulfillment: "retirada", neighborhood: "", address: "" }).success).toBe(true);
+    });
+    it("CEP é opcional, mas se vier precisa ter 8 dígitos", () => {
+      expect(schema.safeParse({ ...valid, cep: "" }).success).toBe(true);
+      expect(schema.safeParse({ ...valid, cep: "32450-000" }).success).toBe(true);
+      expect(errorsOf({ ...valid, cep: "3245" }).cep).toMatch(/CEP inválido/);
+    });
+    it("campos de endereço são limitados", () => {
+      expect(errorsOf({ ...valid, complement: "a".repeat(81) }).complement).toMatch(/80/);
+      expect(errorsOf({ ...valid, reference: "a".repeat(201) }).reference).toMatch(/200/);
+    });
   });
 });

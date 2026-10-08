@@ -1,31 +1,71 @@
 import { useState, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
 import { useDialogBehavior } from "@/hooks/useDialogBehavior";
+import { couponsQueryKey } from "@/hooks/useCoupons";
+import { ordersQueryKey } from "@/hooks/useOrders";
 import { useSettings } from "@/hooks/useSettings";
+import { repositories } from "@/services";
+import type { Order } from "@/domain/orders";
 import CartLineRow from "./CartLineRow";
-import CheckoutForm from "./CheckoutForm";
+import CheckoutForm, { type SubmittedOrder } from "./CheckoutForm";
+import WhatsAppBlockedNotice from "./WhatsAppBlockedNotice";
 import DrawerFooter from "./DrawerFooter";
 
 const CartDrawer = () => {
   const { priced, totalItems, isCartOpen, setIsCartOpen, clearCart, increment, decrement, removeLine } = useCart();
   const settings = useSettings();
   const [showCheckout, setShowCheckout] = useState(false);
+  const [blocked, setBlocked] = useState<SubmittedOrder | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const countedCoupons = useRef(new Set<string>());
 
   const handleClose = useCallback(() => {
     setIsCartOpen(false);
     setShowCheckout(false);
+    setBlocked(null);
   }, [setIsCartOpen]);
 
   useDialogBehavior(isCartOpen, dialogRef, handleClose);
 
-  const handleSent = useCallback(() => {
-    clearCart();
-    handleClose();
-  }, [clearCart, handleClose]);
+  // A sacola só é esvaziada depois que o WhatsApp realmente abriu (ou o cliente abriu o link manualmente).
+  const finish = useCallback(
+    (order: Order, opened: boolean) => {
+      clearCart();
+      handleClose();
+      navigate(`/pedido/${order.id}`, { state: { order, opened } });
+    },
+    [clearCart, handleClose, navigate],
+  );
+
+  const handleSubmitted = useCallback(
+    async (result: SubmittedOrder) => {
+      const { order } = result;
+      try {
+        await repositories.orders.create(order);
+        // Um pedido só consome o cupom uma vez, mesmo que o cliente tente enviar de novo.
+        if (order.couponCode && !countedCoupons.current.has(order.id)) {
+          countedCoupons.current.add(order.id);
+          await repositories.coupons.registerUse(order.couponCode);
+        }
+        void queryClient.invalidateQueries({ queryKey: ordersQueryKey });
+        void queryClient.invalidateQueries({ queryKey: couponsQueryKey });
+      } catch (error) {
+        console.warn("[pedido] não foi possível registrar o pedido neste aparelho:", error);
+        toast.error("Não foi possível guardar o histórico do pedido neste aparelho. A mensagem do WhatsApp não é afetada.");
+      }
+      if (result.opened) finish(order, true);
+      else setBlocked(result);
+    },
+    [finish, queryClient],
+  );
 
   const hasBlockedLines = priced.lines.some((l) => l.unavailableReason);
   const canCheckout = priced.subtotalCents > 0 && !hasBlockedLines;
@@ -67,14 +107,25 @@ const CartDrawer = () => {
               </button>
             </div>
 
-            {showCheckout && totalItems > 0 ? (
-              <CheckoutForm
-                priced={priced}
-                settings={settings}
-                onBack={() => setShowCheckout(false)}
-                onAddMore={handleClose}
-                onSent={handleSent}
+            {blocked && (
+              <WhatsAppBlockedNotice
+                whatsappUrl={blocked.whatsappUrl}
+                onContinue={() => finish(blocked.order, false)}
+                onBack={() => setBlocked(null)}
               />
+            )}
+
+            {showCheckout && totalItems > 0 ? (
+              // Fica montado (só oculto) enquanto o aviso de pop-up bloqueado aparece, para não perder o que o cliente digitou.
+              <div className={blocked ? "hidden" : "flex flex-col flex-1 min-h-0"}>
+                <CheckoutForm
+                  priced={priced}
+                  settings={settings}
+                  onBack={() => setShowCheckout(false)}
+                  onAddMore={handleClose}
+                  onSubmitted={handleSubmitted}
+                />
+              </div>
             ) : (
               <>
                 <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-4 space-y-4 pb-32">

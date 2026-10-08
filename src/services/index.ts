@@ -1,10 +1,22 @@
 import { createLocalCatalogRepository } from "./local/localCatalogRepository";
 import { createLocalSettingsRepository } from "./local/localSettingsRepository";
-import type { CatalogRepository, SettingsRepository } from "./repositories";
+import { createLocalAuthRepository } from "./local/localAuthRepository";
+import { createLocalCouponRepository } from "./local/localCouponRepository";
+import { createLocalOrderRepository } from "./local/localOrderRepository";
+import type {
+  AuthRepository,
+  CatalogRepository,
+  CouponRepository,
+  OrderRepository,
+  SettingsRepository,
+} from "./repositories";
 
 export interface Repositories {
   catalog: CatalogRepository;
   settings: SettingsRepository;
+  orders: OrderRepository;
+  coupons: CouponRepository;
+  auth: AuthRepository;
 }
 
 /**
@@ -20,6 +32,9 @@ export const createRepositories = (): Repositories => {
   return {
     catalog: createLocalCatalogRepository(),
     settings: createLocalSettingsRepository(),
+    orders: createLocalOrderRepository(),
+    coupons: createLocalCouponRepository(),
+    auth: createLocalAuthRepository(),
   };
 };
 
