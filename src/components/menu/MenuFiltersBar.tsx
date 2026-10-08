@@ -25,7 +25,7 @@ const MenuFiltersBar = ({ filters, onChange, onClear, resultCount }: MenuFilters
           type="search"
           value={filters.query}
           onChange={(e) => onChange({ ...filters, query: e.target.value })}
-          placeholder="Buscar hambúrguer, espetinho, bebida…"
+          placeholder="Buscar no cardápio…"
           autoComplete="off"
           className="bg-[#111111] border-border/50 pl-9 pr-9 rounded-full"
         />

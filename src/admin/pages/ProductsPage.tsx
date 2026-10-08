@@ -62,11 +62,11 @@ const ProductsPage = () => {
       </div>
 
       <div className="flex flex-wrap items-end gap-3">
-        <div className="space-y-1">
+        <div className="flex flex-col gap-1">
           <Label htmlFor="pf-q">Buscar</Label>
           <Input id="pf-q" type="search" value={query} onChange={(e) => setQuery(e.target.value)} className="bg-[#111111]" />
         </div>
-        <div className="space-y-1">
+        <div className="flex flex-col gap-1">
           <Label htmlFor="pf-cat">Categoria</Label>
           <select id="pf-cat" className={selectClasses} value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
             <option value="todas">Todas</option>
