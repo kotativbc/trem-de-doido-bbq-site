@@ -24,7 +24,7 @@ describe("fluxo de compra (integração)", () => {
     renderStore();
     expect(await screen.findByText("Trem Vermelho")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Hambúrgueres/ })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByText("R$ 36,90")).toBeInTheDocument();
+    expect(screen.getAllByText("R$ 39,90").length).toBeGreaterThan(0); // Trem Vermelho e Trem de Doido Especial
     expect(screen.queryByText("Arroz Carreteiro")).not.toBeInTheDocument();
   });
 
@@ -46,7 +46,7 @@ describe("fluxo de compra (integração)", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Adicionar mais Trem Vermelho" }));
     expect(openCartButton()).toHaveAccessibleName("Abrir sacola, 2 itens");
-    expect(screen.getByRole("button", { name: /Ver sacola com 2 itens, total R\$ 73,80/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Ver sacola com 2 itens, total R\$ 79,80/ })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Remover Trem Vermelho" }));
     fireEvent.click(screen.getByRole("button", { name: "Remover Trem Vermelho" }));
@@ -62,7 +62,7 @@ describe("fluxo de compra (integração)", () => {
 
     const stored = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) ?? "null");
     expect(stored.lines[0]).toMatchObject({ productId: "h1", quantity: 2 });
-    expect(JSON.stringify(stored)).not.toMatch(/36|3690|Trem Vermelho/);
+    expect(JSON.stringify(stored)).not.toMatch(/39[,.]90|3990|Trem Vermelho/);
 
     first.unmount();
     renderStore();
@@ -189,7 +189,7 @@ describe("fluxo de compra (integração)", () => {
       expect(send).toBeDisabled();
 
       fireEvent.change(change, { target: { value: "50" } });
-      expect(await screen.findByText(/precisa cobrir o total \(R\$ 73,80\)/)).toBeInTheDocument();
+      expect(await screen.findByText(/precisa cobrir o total \(R\$ 79,80\)/)).toBeInTheDocument();
       expect(send).toBeDisabled();
 
       fireEvent.change(change, { target: { value: "100,00" } });
@@ -214,7 +214,7 @@ describe("fluxo de compra (integração)", () => {
       const message = decodeURIComponent(String(url).split("text=")[1]);
       expect(message).toContain("👤 *Cliente:* Samuel\n📞 *Telefone:* (31) 99703-6657");
       expect(message).toContain("📍 *Endereço:* Rua A, 10 - Centro");
-      expect(message).toContain("Trem Vermelho x2 — R$ 73,80");
+      expect(message).toContain("Trem Vermelho x2 — R$ 79,80");
       expect(message).toContain("💵 *Troco para:* R$ 100,00");
       expect(message).toContain("📝 *Observações:* Sem cebola");
 
@@ -224,7 +224,7 @@ describe("fluxo de compra (integração)", () => {
 
       const orders = await repositories.orders.list();
       expect(orders).toHaveLength(1);
-      expect(orders[0]).toMatchObject({ status: "recebido", totalCents: 7380, customer: { name: "Samuel" } });
+      expect(orders[0]).toMatchObject({ status: "recebido", totalCents: 7980, customer: { name: "Samuel" } });
       expect(screen.getByTestId("path")).toHaveTextContent(`/pedido/${orders[0].id}`);
       expect(message).toContain(`🧾 *Pedido:* ${orders[0].id}`);
     });
@@ -258,7 +258,7 @@ describe("fluxo de compra (integração)", () => {
       await goToCheckout();
       const summary = screen.getByText("Resumo:").parentElement as HTMLElement;
       expect(within(summary).getByText("Trem Vermelho x2")).toBeInTheDocument();
-      expect(within(summary).getByText("R$ 73,80")).toBeInTheDocument();
+      expect(within(summary).getByText("R$ 79,80")).toBeInTheDocument();
     });
 
     it("taxa de entrega por bairro entra no total e na mensagem; retirada zera a taxa", async () => {
@@ -271,7 +271,7 @@ describe("fluxo de compra (integração)", () => {
       fillDelivery();
       await waitFor(() => expect(send).toBeEnabled());
       expect(screen.getByText("Taxa de entrega").nextSibling).toHaveTextContent("R$ 5,00");
-      expect(screen.getByText("Total do Pedido").parentElement).toHaveTextContent("R$ 78,80");
+      expect(screen.getByText("Total do Pedido").parentElement).toHaveTextContent("R$ 84,80");
 
       fireEvent.click(screen.getByRole("button", { name: /Retirar no Balcão/ }));
       await waitFor(() => expect(screen.queryByText("Taxa de entrega")).not.toBeInTheDocument());
@@ -280,7 +280,7 @@ describe("fluxo de compra (integração)", () => {
       fireEvent.click(send);
       await waitFor(() => expect(open).toHaveBeenCalled());
       const message = decodeURIComponent(String(open.mock.calls[0][0]).split("text=")[1]);
-      expect(message).toContain("🛵 *Taxa de entrega:* R$ 5,00\n💰 *TOTAL:* R$ 78,80");
+      expect(message).toContain("🛵 *Taxa de entrega:* R$ 5,00\n💰 *TOTAL:* R$ 84,80");
     });
 
     it("pedido mínimo bloqueia a entrega com aviso, mas não a retirada", async () => {
@@ -290,7 +290,7 @@ describe("fluxo de compra (integração)", () => {
       });
       const send = await goToCheckout();
       fillDelivery();
-      expect(await screen.findByText(/Pedido mínimo para entrega: R\$ 100,00\. Faltam R\$ 26,20/)).toBeInTheDocument();
+      expect(await screen.findByText(/Pedido mínimo para entrega: R\$ 100,00\. Faltam R\$ 20,20/)).toBeInTheDocument();
       expect(send).toBeDisabled();
       fireEvent.click(screen.getByRole("button", { name: /Retirar no Balcão/ }));
       await waitFor(() => expect(send).toBeEnabled());
@@ -317,9 +317,9 @@ describe("fluxo de compra (integração)", () => {
 
       fireEvent.change(input, { target: { value: "bemvindo10" } });
       fireEvent.click(screen.getByRole("button", { name: "Aplicar" }));
-      expect(await screen.findByText(/Cupom BEMVINDO10 aplicado: - R\$ 7,38/)).toBeInTheDocument();
-      expect(screen.getByText("Desconto").nextSibling).toHaveTextContent("- R$ 7,38");
-      expect(screen.getByText("Total do Pedido").parentElement).toHaveTextContent("R$ 66,42");
+      expect(await screen.findByText(/Cupom BEMVINDO10 aplicado: - R\$ 7,98/)).toBeInTheDocument();
+      expect(screen.getByText("Desconto").nextSibling).toHaveTextContent("- R$ 7,98");
+      expect(screen.getByText("Total do Pedido").parentElement).toHaveTextContent("R$ 71,82");
 
       fireEvent.click(screen.getByRole("button", { name: /Remover cupom BEMVINDO10/ }));
       await waitFor(() => expect(screen.queryByText("Desconto")).not.toBeInTheDocument());

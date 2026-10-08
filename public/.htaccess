@@ -1,0 +1,47 @@
+# Hospedagem Apache/LiteSpeed (DirectAdmin): site de página única (React).
+# Envie ESTE arquivo junto com o resto de dist/ para o public_html (ele é oculto: ative "mostrar arquivos ocultos").
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # O site precisa estar na raiz do domínio (para uma subpasta, ajuste esta linha e o "base" do vite.config.ts).
+  RewriteBase /
+  # Endereços como /pedido/123 ou /gerenciar/<código> não são arquivos: entregam o site, que decide o que mostrar.
+  # Arquivos e pastas que existem (assets, api, uploads...) são servidos normalmente.
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-l
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# Buscadores não devem indexar o editor nem a confirmação de pedido.
+<IfModule mod_setenvif.c>
+  <IfModule mod_headers.c>
+    SetEnvIf Request_URI "^/(gerenciar|pedido)(/|$)" TDD_NOINDEX
+    Header set X-Robots-Tag "noindex, nofollow" env=TDD_NOINDEX
+  </IfModule>
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  # O site não precisa ser exibido dentro de outro site.
+  Header always set X-Frame-Options "SAMEORIGIN"
+
+  # Imagens e ícones: um dia de cache (podem ser trocados com mesmo nome).
+  <FilesMatch "\.(jpe?g|png|webp|svg|ico)$">
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+  # Tudo em /assets tem hash no nome do arquivo: pode ficar em cache por um ano.
+  <IfModule mod_setenvif.c>
+    SetEnvIf Request_URI "^/assets/" TDD_IMMUTABLE
+    Header set Cache-Control "public, max-age=31536000, immutable" env=TDD_IMMUTABLE
+  </IfModule>
+  # A página inicial e a API nunca ficam em cache: alterações no cardápio aparecem na hora.
+  <FilesMatch "(^index\.html$|\.php$|\.webmanifest$)">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+</IfModule>

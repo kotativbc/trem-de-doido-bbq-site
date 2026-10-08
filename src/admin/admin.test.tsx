@@ -276,7 +276,7 @@ describe("painel: produtos", () => {
     renderAdmin("/admin/produtos");
     fireEvent.click(await screen.findByRole("button", { name: "Editar Trem Vermelho" }));
     const dialog = await screen.findByRole("dialog", { name: "Editar produto" });
-    expect(within(dialog).getByLabelText("Preço (R$) *")).toHaveValue("36,90");
+    expect(within(dialog).getByLabelText("Preço (R$) *")).toHaveValue("39,90");
     fireEvent.change(within(dialog).getByLabelText("Preço (R$) *"), { target: { value: "39,90" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Salvar produto" }));
     await waitFor(async () => expect((await repositories.catalog.getCatalog()).products.find((p) => p.id === "h1")?.priceCents).toBe(3990));

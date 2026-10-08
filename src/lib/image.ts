@@ -28,3 +28,13 @@ export const fileToResizedDataUrl = async (file: File): Promise<string> => {
   bitmap.close();
   return canvas.toDataURL("image/jpeg", QUALITY);
 };
+
+/** Converte o data URL gerado por `fileToResizedDataUrl` de volta em arquivo, para enviar ao servidor. */
+export const dataUrlToBlob = (dataUrl: string): Blob => {
+  const [header, payload = ""] = dataUrl.split(",");
+  const mime = /^data:([^;]+)/.exec(header)?.[1] ?? "application/octet-stream";
+  const binary = atob(payload);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+};

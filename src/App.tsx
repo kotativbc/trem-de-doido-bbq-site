@@ -9,9 +9,11 @@ import { CartProvider } from "@/context/CartContext";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { demoAdminEnabled } from "@/services";
 
 // O painel e suas dependências só são baixados por quem abre /admin.
 const AdminRoutes = lazy(() => import("./admin/AdminRoutes.tsx"));
+const EditorRoutes = lazy(() => import("./editor/EditorRoutes"));
 const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation.tsx"));
 
 const PageFallback = () => <div role="status" aria-label="Carregando" className="min-h-screen bg-background" />;
@@ -43,14 +45,26 @@ const App = () => (
                     </Suspense>
                   }
                 />
+                {/* Endereço secreto: o código é conferido no servidor; sem ele, é uma página 404 comum. */}
                 <Route
-                  path="/admin/*"
+                  path="/gerenciar/:token/*"
                   element={
                     <Suspense fallback={<PageFallback />}>
-                      <AdminRoutes />
+                      <EditorRoutes />
                     </Suspense>
                   }
                 />
+                {/* O painel de demonstração (dados só no navegador) não existe na versão publicada. */}
+                {demoAdminEnabled && (
+                  <Route
+                    path="/admin/*"
+                    element={
+                      <Suspense fallback={<PageFallback />}>
+                        <AdminRoutes />
+                      </Suspense>
+                    }
+                  />
+                )}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </CartProvider>

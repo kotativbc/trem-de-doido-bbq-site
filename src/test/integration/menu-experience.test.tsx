@@ -145,7 +145,7 @@ describe("experiência do cardápio (integração)", () => {
       expect(within(dialog).getByRole("checkbox", { name: /Queijo extra/ })).toBeDisabled();
       fireEvent.change(within(dialog).getByLabelText("Observação do item"), { target: { value: "sem cebola" } });
       fireEvent.click(within(dialog).getByRole("button", { name: "Aumentar quantidade" }));
-      expect(within(dialog).getByRole("button", { name: /^Adicionar •/ })).toHaveTextContent("R$ 89,80"); // (36,90 + 5 + 3) x 2
+      expect(within(dialog).getByRole("button", { name: /^Adicionar •/ })).toHaveTextContent("R$ 95,80"); // (39,90 + 5 + 3) x 2
       fireEvent.click(within(dialog).getByRole("button", { name: /^Adicionar •/ }));
 
       await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
@@ -158,7 +158,7 @@ describe("experiência do cardápio (integração)", () => {
       const drawer = await screen.findByRole("dialog", { name: "Sacola de compras" });
       expect(within(drawer).getByText("+ Bem passado, Bacon, Ovo")).toBeInTheDocument();
       expect(within(drawer).getByText("Obs: sem cebola")).toBeInTheDocument();
-      expect(within(drawer).getAllByText("R$ 89,80")).toHaveLength(2); // linha e total do rodapé
+      expect(within(drawer).getAllByText("R$ 95,80")).toHaveLength(2); // linha e total do rodapé
     });
 
     it("Escape no diálogo de opções fecha só o diálogo", async () => {

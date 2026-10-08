@@ -1,9 +1,10 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { ExternalLink, Flame, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { isSharedCatalog } from "@/services";
 import { useAdminAuth } from "./adminAuthContext";
 
-const links = [
+const allLinks = [
   { to: "/admin", label: "Resumo", end: true },
   { to: "/admin/pedidos", label: "Pedidos" },
   { to: "/admin/produtos", label: "Produtos" },
@@ -12,8 +13,10 @@ const links = [
   { to: "/admin/configuracoes", label: "Configurações" },
 ];
 
+// Com cardápio no servidor, produtos e categorias são editados pelo link secreto, não aqui.
 const AdminLayout = () => {
   const { logout } = useAdminAuth();
+  const links = isSharedCatalog ? allLinks.filter((l) => !/produtos|categorias/.test(l.to)) : allLinks;
 
   return (
     <div className="min-h-screen bg-background text-foreground">

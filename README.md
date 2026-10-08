@@ -2,7 +2,7 @@
 
 Site de pedidos do **Trem de Doido BBQ** (Av. João Pinheiro, 107 — Sarzedo/MG): cardápio, sacola, checkout com envio do pedido por WhatsApp e um painel administrativo.
 
-Funciona **sem nenhuma credencial**, em modo demo (dados no `localStorage` do navegador), e já está organizado para trocar o armazenamento por um backend real (ver [Backend](#backend)).
+Funciona **sem nenhuma credencial**: em desenvolvimento, em modo demo (dados no `localStorage` do navegador); publicado, com o cardápio guardado no servidor por uma API PHP e editável por um link secreto. Também está organizado para trocar o armazenamento por outro backend (ver [Backend](#backend)).
 
 ## Rodando localmente
 
@@ -20,6 +20,8 @@ npm run dev          # http://localhost:8080
 | `npm run preview` | serve o build local |
 | `npm run lint` | ESLint (0 erros; avisos restantes são de `components/ui/*` do shadcn) |
 | `npm test` | testes unitários e de integração (Vitest + Testing Library) |
+| `npm run test:api` | teste de ponta a ponta da API PHP (precisa de `php` e `curl`) |
+| `npm run gerar-link -- <endereço do site>` | gera o link secreto de edição e cria `public/api/config.php` |
 | `npx tsc -p tsconfig.app.json --noEmit` | checagem de tipos (TypeScript `strict`) |
 
 ## Variáveis de ambiente
@@ -28,14 +30,58 @@ Copie `.env.example` para `.env.local`. Tudo que começa com `VITE_` é público
 
 | Variável | Uso | Padrão |
 |---|---|---|
-| `VITE_BACKEND` | backend dos repositórios; só `demo` está implementado | `demo` |
+| `VITE_BACKEND` | `php` = cardápio no servidor e editor por link secreto (já definido em `.env.production`); `demo` = tudo no navegador | `demo` (dev e testes) |
+| `VITE_ENABLE_DEMO_ADMIN` | `true` liga o painel `/admin` de demonstração mesmo com `VITE_BACKEND=php` | desligado |
 | `VITE_SITE_URL` | URL pública (sem barra final) para `canonical` e `og:image` no build | vazio (caminhos relativos) |
 
-## Painel administrativo
+## Publicar na hospedagem (DirectAdmin ou qualquer Apache/LiteSpeed com PHP)
 
-Acesse `/admin`. No primeiro acesso é criada a senha do painel (mínimo 8 caracteres). Ele permite: resumo do dia, **pedidos** (status com histórico, impressão), **produtos** (CRUD, imagem, disponibilidade, destaque, adicionais), **categorias**, **cupons** e **configurações** (contato, horários, taxa por bairro, pedido mínimo, banner de promoção).
+O site é estático (HTML, CSS e JavaScript gerados pelo build) mais uma API PHP pequena que guarda o cardápio. Não precisa de Node, banco de dados nem terminal no servidor.
 
-> **Importante — modo demo.** A senha é guardada (com hash PBKDF2) no navegador de quem a criou, e os pedidos ficam no navegador do cliente que os fez. Isso serve para testar e demonstrar; **não é segurança real** nem uma caixa de entrada de pedidos. Enquanto não houver backend, o canal real do pedido é o WhatsApp: o restaurante só recebe o pedido quando o cliente envia a mensagem.
+**No seu computador (uma vez):**
+
+```bash
+npm install
+npm run gerar-link -- https://www.seudominio.com.br   # cria o link secreto de edição (veja abaixo)
+```
+
+**A cada atualização do site:**
+
+```bash
+npm run build        # gera a pasta dist/
+```
+
+Envie **todo o conteúdo de `dist/`** para a pasta `public_html` (pelo Gerenciador de Arquivos ou FTP), sobrescrevendo os arquivos existentes. Atenção:
+
+- **Mostre os arquivos ocultos** no Gerenciador de Arquivos/FTP: o `.htaccess` é obrigatório. Sem ele, endereços como `/pedido/...` e o link do editor dão erro 404 ao recarregar a página.
+- **Não apague** as pastas `api/data` (cardápio salvo e histórico) e `uploads` (fotos enviadas pelo editor) ao atualizar. Sobrescrever sem apagar é seguro: o `dist/` não contém essas pastas.
+- O site precisa estar na **raiz** do domínio (ou subdomínio). Para uma subpasta, defina `base` em `vite.config.ts`.
+- O PHP precisa ser 7.4 ou superior, com permissão de escrita na pasta `api/` e na raiz (para criar `api/data` e `uploads`). Na maioria das hospedagens DirectAdmin isso já é o padrão (pastas 755).
+- Antes do build, copie `VITE_SITE_URL` (ex.: `https://www.seudominio.com.br`) para um arquivo `.env.production.local` se quiser que o `canonical` e a imagem de compartilhamento saiam com o endereço completo.
+
+## Link secreto para editar o cardápio
+
+O cliente edita o cardápio (adicionar, remover, alterar preço, foto, descrição, esgotar, ordem, categorias) por um endereço como:
+
+```
+https://www.seudominio.com.br/gerenciar/3f9a...c41d     (48 caracteres aleatórios)
+```
+
+- **Sem senha**: quem tem o link entra. O link não aparece em nenhuma página do site, fica fora do `robots.txt` e a página tem `noindex`.
+- **Impossível de adivinhar**: o código tem 192 bits aleatórios. Ele é conferido **no servidor** (a API só guarda o hash SHA-256 dele, em `api/config.php`). Quem digita um código errado, ou `/gerenciar` sem código, vê a mesma página 404 de qualquer endereço inexistente.
+- **Para gerar (ou trocar) o link**: `npm run gerar-link -- https://www.seudominio.com.br`, depois `npm run build` e envie `dist/` de novo. O link é mostrado uma única vez; guarde-o num lugar seguro. Gerar de novo invalida o link anterior (use isso se ele vazar).
+- **Cada alteração é salva na hora** no servidor e aparece para todos os clientes ao recarregar o site. Não precisa fazer build nem enviar arquivos para mudar o cardápio.
+- **Segurança de verdade**: o link funciona como uma chave. Quem o receber (ou quem o encontrar no histórico do navegador, num print ou numa mensagem encaminhada) consegue editar o cardápio. Compartilhe só com quem deve editar e troque o link se desconfiar de vazamento.
+- **Cópias de segurança**: o servidor guarda as últimas 30 versões em `api/data/history/` (arquivos `catalog-NNNNNN.json`; para voltar a uma, restaure-a pelo botão "Restaurar cópia" do editor). O editor também tem "Baixar cópia". Faça uma cópia antes de mudanças grandes.
+- **Primeira vez**: enquanto ninguém salvar nada, o site mostra o cardápio que vem no código (`src/data/seed/catalog.ts`). A partir da primeira edição, o cardápio do servidor é o que vale; mudanças futuras nesse arquivo não aparecem sozinhas (use "Restaurar cópia").
+
+Fotos: o editor reduz a imagem no navegador (até 900 px) e a envia para `uploads/` com nome aleatório; o servidor confere que o arquivo é mesmo JPG, PNG ou WebP e bloqueia a execução de scripts nessa pasta.
+
+Testes da API PHP (precisa de `php` e `curl` no seu computador): `npm run test:api`.
+
+## Painel de demonstração (`/admin`)
+
+Existe um painel com senha (pedidos, produtos, cupons, configurações) cujos dados ficam **só no navegador** de quem o usa. Serve para desenvolvimento e demonstração (`npm run dev`) e **não existe na versão publicada** (o build de produção usa `VITE_BACKEND=php`, que o desliga). Na versão publicada, pedidos continuam chegando pelo WhatsApp; cupons, taxa de entrega por bairro, horários e banner são os valores de `src/config/business.ts`.
 
 ## Arquitetura
 
@@ -43,10 +89,12 @@ Acesse `/admin`. No primeiro acesso é criada a senha do painel (mínimo 8 carac
 src/
   config/      dados do negócio (business.ts) e textos do site
   domain/      regras puras e testadas: preço, carrinho, horário, taxa, cupom, pedido, WhatsApp, SEO…
-  services/    contratos de repositório (repositories.ts) + implementação local (services/local)
+  services/    contratos de repositório (repositories.ts) + implementação local (services/local) e PHP (services/php)
+public/api/    API PHP do cardápio (catalog.php, upload.php) copiada para dist/ no build
   hooks/       TanStack Query + contexto do carrinho sobre os repositórios
   components/  seções do site, sacola/checkout, cardápio
-  admin/       painel (carregado sob demanda, rota /admin/*)
+  editor/      editor do cardápio por link secreto (rota /gerenciar/:código)
+  admin/       painel de demonstração (rota /admin/*) e páginas reaproveitadas pelo editor
   pages/       Index, confirmação do pedido (/pedido/:id), 404
 ```
 

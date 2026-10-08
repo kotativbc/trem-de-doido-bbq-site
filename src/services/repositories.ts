@@ -21,6 +21,22 @@ export interface CatalogRepository {
   reorderProducts(categoryId: string, orderedIds: string[]): Promise<void>;
   /** Volta ao cardápio original do projeto. */
   resetToSeed(): Promise<void>;
+  /** Substitui o cardápio inteiro (restauração de uma cópia de segurança). */
+  replaceCatalog(catalog: Catalog): Promise<void>;
+  /**
+   * Prepara a foto escolhida e devolve o endereço a guardar no produto:
+   * um data URL no modo demo, ou o caminho /uploads/... quando há servidor.
+   */
+  saveImage(file: File): Promise<string>;
+}
+
+/**
+ * Quem pode editar o cardápio. O editor é aberto por um link com código secreto;
+ * `authorize` confere o código (no servidor, quando existe) e prepara as gravações seguintes.
+ */
+export interface EditorAccessRepository {
+  /** false = código inválido. Lança se o servidor não puder ser consultado. */
+  authorize(token: string): Promise<boolean>;
 }
 
 export interface SettingsRepository {

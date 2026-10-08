@@ -2,14 +2,26 @@ import { defaultBusinessSettings } from "@/config/business";
 import type { BusinessSettings } from "@/domain/settings";
 import type { Catalog, Product } from "@/domain/types";
 import { seedCatalog } from "@/data/seed/catalog";
+import { menuItems as originalMenu } from "@/test/fixtures/baselineMenu";
 
 export const settingsWith = (patch: Partial<BusinessSettings> = {}): BusinessSettings => ({
   ...structuredClone(defaultBusinessSettings),
   ...patch,
 });
 
+/**
+ * Os testes de regra (preço, mensagem de WhatsApp, pedido) usam os preços do cardápio ORIGINAL, congelados,
+ * para que uma atualização de preços do restaurante em `seed/catalog.ts` não quebre contas que não mudaram.
+ * A paridade do cardápio atual é verificada à parte, em `seedParity.test.ts`.
+ */
+const originalById = new Map(originalMenu.map((item) => [item.id, item]));
+
 export const catalogWith = (products: Partial<Product>[] = []): Catalog => {
   const base = structuredClone(seedCatalog);
+  base.products = base.products.map((p) => {
+    const original = originalById.get(p.id);
+    return original ? { ...p, priceCents: Math.round(original.price * 100), description: original.description } : p;
+  });
   for (const patch of products) {
     base.products = base.products.map((p) => (p.id === patch.id ? { ...p, ...patch } : p));
   }

@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "gerar-link": "node scripts/gerar-link.mjs",
+    "test:api": "bash scripts/test-api.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

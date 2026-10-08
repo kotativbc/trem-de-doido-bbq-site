@@ -13,3 +13,12 @@ describe("validação de imagem enviada", () => {
     expect(validateImageFile({ type: "image/png", size: MAX_SOURCE_BYTES + 1, name: "a.png" })).toMatch(/5 MB/);
   });
 });
+
+describe("dataUrlToBlob", () => {
+  it("converte data URL em arquivo com o tipo e os bytes certos", async () => {
+    const { dataUrlToBlob } = await import("./image");
+    const blob = dataUrlToBlob("data:image/jpeg;base64,/9j/4AAQ");
+    expect(blob.type).toBe("image/jpeg");
+    expect(blob.size).toBe(6);
+  });
+});

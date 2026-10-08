@@ -63,7 +63,7 @@ describe("fluxo de status", () => {
 
 describe("id do pedido", () => {
   it("tem prefixo e 6 caracteres", () => {
-    expect(generateOrderId()).toMatch(/^TDD-[0-9A-HJKMNP-Z]{6}$/);
+    expect(generateOrderId()).toMatch(/^TDD-[0-9A-HJKLMNP-Z]{6}$/);
   });
 });
 

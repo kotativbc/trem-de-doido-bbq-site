@@ -11,7 +11,7 @@ import { uniqueId } from "@/domain/ids";
 import { formatDecimalBRL, parseBRLToCents } from "@/domain/money";
 import { productSchema } from "@/domain/schemas";
 import type { Catalog, Product } from "@/domain/types";
-import { fileToResizedDataUrl } from "../lib/image";
+import { repositories } from "@/services";
 import AddonGroupsEditor, { type GroupDraft } from "./AddonGroupsEditor";
 
 interface ProductFormDialogProps {
@@ -57,10 +57,14 @@ const ProductFormDialog = ({ product, catalog, defaultCategoryId, onSave, onClos
   const upload = async (file: File | undefined) => {
     if (!file) return;
     setError("");
+    setBusy(true);
     try {
-      setImageUrl(await fileToResizedDataUrl(file));
+      // Modo demo: fica no navegador. Servidor PHP: é enviada e vira um endereço /uploads/...
+      setImageUrl(await repositories.catalog.saveImage(file));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível usar esta imagem.");
+    } finally {
+      setBusy(false);
     }
   };
 
