@@ -1,10 +1,11 @@
-import { useState, useCallback, useRef } from "react";
+import { lazy, Suspense, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/hooks/useCart";
 import { useDialogBehavior } from "@/hooks/useDialogBehavior";
 import { couponsQueryKey } from "@/hooks/useCoupons";
@@ -13,9 +14,12 @@ import { useSettings } from "@/hooks/useSettings";
 import { repositories } from "@/services";
 import type { Order } from "@/domain/orders";
 import CartLineRow from "./CartLineRow";
-import CheckoutForm, { type SubmittedOrder } from "./CheckoutForm";
+import type { SubmittedOrder } from "./CheckoutForm";
 import WhatsAppBlockedNotice from "./WhatsAppBlockedNotice";
 import DrawerFooter from "./DrawerFooter";
+
+// A validação e o formulário só são baixados quando o cliente chega ao checkout.
+const CheckoutForm = lazy(() => import("./CheckoutForm"));
 
 const CartDrawer = () => {
   const { priced, totalItems, isCartOpen, setIsCartOpen, clearCart, increment, decrement, removeLine, setLineNote, reorder } =
@@ -120,13 +124,23 @@ const CartDrawer = () => {
             {showCheckout && totalItems > 0 ? (
               // Fica montado (só oculto) enquanto o aviso de pop-up bloqueado aparece, para não perder o que o cliente digitou.
               <div className={blocked ? "hidden" : "flex flex-col flex-1 min-h-0"}>
-                <CheckoutForm
-                  priced={priced}
-                  settings={settings}
-                  onBack={() => setShowCheckout(false)}
-                  onAddMore={handleClose}
-                  onSubmitted={handleSubmitted}
-                />
+                <Suspense
+                  fallback={
+                    <div role="status" aria-label="Carregando formulário" className="flex-1 space-y-4 px-5 py-4">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-24 w-full" />
+                    </div>
+                  }
+                >
+                  <CheckoutForm
+                    priced={priced}
+                    settings={settings}
+                    onBack={() => setShowCheckout(false)}
+                    onAddMore={handleClose}
+                    onSubmitted={handleSubmitted}
+                  />
+                </Suspense>
               </div>
             ) : (
               <>
@@ -180,7 +194,7 @@ const CartDrawer = () => {
                     >
                       Finalizar Pedido
                     </Button>
-                    <button onClick={handleClose} className="w-full text-primary/70 hover:text-primary text-xs py-2 mt-2 transition-colors">
+                    <button onClick={handleClose} className="w-full text-primary hover:text-primary/80 text-xs py-2 mt-2 transition-colors">
                       + Adicionar mais itens
                     </button>
                   </DrawerFooter>

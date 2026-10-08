@@ -1,9 +1,10 @@
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import { Flame, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
 import { useSettings } from "@/hooks/useSettings";
 import { siteContent } from "@/config/siteContent";
+import { scrollToId as scrollTo } from "@/lib/scroll";
 import { motion } from "framer-motion";
 
 const navLinkClass =
@@ -13,9 +14,6 @@ const StickyHeader = memo(() => {
   const { totalItems, setIsCartOpen } = useCart();
   const settings = useSettings();
 
-  const scrollTo = useCallback((id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">

@@ -181,7 +181,7 @@ const ProductFormDialog = ({ product, catalog, defaultCategoryId, onSave, onClos
                 </div>
               )}
               <div className="flex flex-wrap gap-2">
-                <input ref={fileRef} id="p-file" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => void upload(e.target.files?.[0])} />
+                <input ref={fileRef} id="p-file" aria-label="Enviar imagem do produto" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => void upload(e.target.files?.[0])} />
                 <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
                   <Upload className="mr-1 h-4 w-4" aria-hidden="true" /> Enviar imagem
                 </Button>

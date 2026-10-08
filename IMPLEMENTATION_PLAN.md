@@ -118,7 +118,7 @@ Preços hoje são `number` em reais com ponto flutuante (`36.9`, `39.99`). **Dec
 ### Fase 3 — Novas funcionalidades
 Ordem de entrega: (1) entrega + checkout (telefone, CEP/ViaCEP com fallback manual, complemento, referência, taxa por faixa, pedido mínimo, aberto/fechado, previsão); (2) cupons, adicionais, observação por item, banner, destaque; (3) busca, filtros, esgotado, confirmação de pedido, "pedir novamente"; (4) admin: login, dashboard, CRUD de produtos/categorias, ordenação, configurações; (5) gestão de pedidos com histórico de status e impressão. Rotas novas: `/admin/*` (lazy), `/pedido/:id`.
 
-### Fase 4 — Qualidade e entrega
+### Fase 4 — Qualidade e entrega (concluída — ver CHANGELOG.md)
 Acessibilidade (foco, trap, labels, contraste AA, `prefers-reduced-motion`), SEO (favicon, manifest, OG, JSON-LD `Restaurant`, canonical, sitemap), performance (lazy de rotas admin, imagens com dimensões), `ErrorBoundary`, testes de integração, varredura nos 4 viewports comparada ao baseline, README, CHANGELOG, build final.
 
 ### 4.4 Contrato de paridade da mensagem de WhatsApp (travado por teste)
@@ -148,7 +148,7 @@ Na Fase 3 entram, **sem quebrar esse esqueleto**, linhas adicionais (telefone, s
 ## 5. Decisões técnicas
 
 1. **Stack mantida** (React 18, Vite, TS, Tailwind, shadcn/Radix, Framer Motion, Lucide, Router, RHF + Zod, TanStack Query). Nenhuma dependência nova é necessária para as funções pedidas; `@supabase/supabase-js` **não** será adicionado agora (sem credenciais). O ponto de troca é a interface de repositório, documentada no README.
-2. **Gerenciador oficial: npm** (`package-lock.json` regenerado). `bun.lock`/`bun.lockb` ficam até confirmação (Q10), porque três lockfiles divergentes causam builds diferentes.
+2. **Gerenciador oficial: npm** (`package-lock.json` regenerado). `bun.lock`/`bun.lockb` foram removidos na Fase 4 (Q10), porque três lockfiles divergentes causam builds diferentes.
 3. **Dinheiro em centavos inteiros**, formatação via `Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL'})`.
 4. **Preço calculado em um único módulo** (`domain/pricing.ts`), consumido por card, carrinho, checkout, mensagem de WhatsApp e admin.
 5. **Persistência do carrinho**: chave versionada (`tdd.cart.v1`), dados validados com Zod ao ler; preço não é confiado do storage (é recalculado a partir do catálogo vigente, e itens que não existem mais são descartados com aviso).
@@ -178,8 +178,8 @@ Na Fase 3 entram, **sem quebrar esse esqueleto**, linhas adicionais (telefone, s
 | Q3 | Pedido mínimo? | valor · sem mínimo | **Sem mínimo** |
 | Q4 | Itens de "Domingos" devem ser bloqueados fora de domingo? | bloquear · só avisar · não controlar | **Não bloquear** (preserva o comportamento atual); chave no admin para ativar |
 | Q5 | Pedido com a loja fechada? | bloquear envio · permitir com aviso | **Avisar e bloquear envio**; chave "aceitar pedido fora do horário" no admin |
-| Q6 | Previsão de preparo/entrega? | minutos de preparo e de entrega | **Placeholder 40–60 min**, marcado como estimativa configurável |
+| Q6 | Previsão de preparo/entrega? | minutos de preparo e de entrega | **Preparo 30–40 min + entrega 10–20 min**, marcado como estimativa configurável |
 | Q7 | Link oficial do Instagram? | confirmar URL | `https://instagram.com/tremdedoidobbq` |
 | Q8 | As 3 avaliações e a nota 5.0 são reais do Google? | sim · trocar | **Mantidas como estão**; se não forem reais, devem sair |
 | Q9 | Manter o crédito "Desenvolvido por KotaTI" com link? | sim · não | **Mantido** (movido para config) |
-| Q10 | Remover `bun.lock`/`bun.lockb`? | sim (npm oficial) · manter bun | **Mantidos** até confirmar |
+| Q10 | Remover `bun.lock`/`bun.lockb`? | sim (npm oficial) · manter bun | **Removidos** (npm é o gerenciador oficial; reversível via git) |

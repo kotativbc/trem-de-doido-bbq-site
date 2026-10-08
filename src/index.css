@@ -13,7 +13,8 @@
     --popover: 0 0% 8%;
     --popover-foreground: 0 0% 95%;
     --primary: 24 95% 53%;
-    --primary-foreground: 0 0% 100%;
+    /* Texto escuro sobre o laranja: branco dava 2,85:1 (reprova WCAG AA); #0A0A0A dá ~7:1. */
+    --primary-foreground: 0 0% 4%;
     --secondary: 28 79% 19%;
     --secondary-foreground: 0 0% 95%;
     --muted: 0 0% 15%;
@@ -95,5 +96,17 @@
   .print-area * {
     color: #000 !important;
     background: transparent !important;
+  }
+}
+
+/* Quem pede menos movimento no sistema não recebe animações nem rolagem suave. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

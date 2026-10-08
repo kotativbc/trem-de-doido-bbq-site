@@ -43,7 +43,7 @@ const FooterSection = () => {
             href={whatsappChatUrl(developer.whatsappNumber, developer.message)}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary hover:underline"
+            className="text-primary underline underline-offset-2 hover:no-underline"
           >
             {developer.name}
           </a>

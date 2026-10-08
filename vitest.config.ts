@@ -9,6 +9,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    // Os testes de integração montam a página inteira; sob carga os 5 s padrão ficam apertados.
+    testTimeout: 15000,
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },

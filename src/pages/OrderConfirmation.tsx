@@ -1,3 +1,4 @@
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft, Flame, MapPin, MessageCircle, RotateCcw } from "lucide-react";
@@ -25,6 +26,7 @@ const Row = ({ label, children }: { label: string; children: React.ReactNode }) 
 );
 
 const OrderConfirmation = () => {
+  usePageMeta("Seu pedido | Trem de Doido BBQ", { noindex: true });
   const { id } = useParams();
   const state = (useLocation().state ?? {}) as LocationState;
   const navigate = useNavigate();

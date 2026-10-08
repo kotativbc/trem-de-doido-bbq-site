@@ -21,7 +21,7 @@ const WhatsAppBlockedNotice = ({ whatsappUrl, onContinue, onBack }: WhatsAppBloc
         Abrir WhatsApp
       </a>
     </Button>
-    <Button type="button" variant="ghost" className="w-full text-[#888] hover:text-[#E5E5E5] text-sm" onClick={onBack}>
+    <Button type="button" variant="ghost" className="w-full text-[#999] hover:bg-[#1F1F1F] hover:text-[#E5E5E5] text-sm" onClick={onBack}>
       ← Voltar ao pedido
     </Button>
   </div>

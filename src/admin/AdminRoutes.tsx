@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminAuthProvider } from "./AdminAuthProvider";
 import { useAdminAuth } from "./adminAuthContext";
@@ -40,10 +41,13 @@ const Gate = () => {
   );
 };
 
-const AdminRoutes = () => (
-  <AdminAuthProvider>
-    <Gate />
-  </AdminAuthProvider>
-);
+const AdminRoutes = () => {
+  usePageMeta("Painel | Trem de Doido BBQ", { noindex: true });
+  return (
+    <AdminAuthProvider>
+      <Gate />
+    </AdminAuthProvider>
+  );
+};
 
 export default AdminRoutes;

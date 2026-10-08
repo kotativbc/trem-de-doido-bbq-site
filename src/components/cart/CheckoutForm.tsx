@@ -351,10 +351,10 @@ const CheckoutForm = ({ priced, settings, onBack, onAddMore, onSubmitted }: Chec
             <Send className="h-4 w-4" aria-hidden="true" />
             Enviar Pedido via WhatsApp
           </Button>
-          <Button type="button" variant="ghost" className="w-full text-[#888] hover:text-[#E5E5E5] text-sm" onClick={onBack}>
+          <Button type="button" variant="ghost" className="w-full text-[#999] hover:bg-[#1F1F1F] hover:text-[#E5E5E5] text-sm" onClick={onBack}>
             ← Voltar à Sacola
           </Button>
-          <button type="button" onClick={onAddMore} className="w-full text-primary/70 hover:text-primary text-xs py-2 transition-colors">
+          <button type="button" onClick={onAddMore} className="w-full text-primary hover:text-primary/80 text-xs py-2 transition-colors">
             + Adicionar mais itens
           </button>
         </div>

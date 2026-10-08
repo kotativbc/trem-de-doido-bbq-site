@@ -1,10 +1,11 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import heroBg from "@/assets/hero-bbq.jpg";
 import { siteContent } from "@/config/siteContent";
 import { useSettings } from "@/hooks/useSettings";
+import { scrollToId as scrollTo } from "@/lib/scroll";
 
 export const SmokeButton = ({ onClick, children, className = "" }: { onClick?: () => void; children: React.ReactNode; className?: string }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -37,10 +38,6 @@ const HeroSection = () => {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-
-  const scrollTo = useCallback((id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-  }, []);
 
   return (
     <section ref={ref} className="relative h-screen min-h-[600px] overflow-hidden pt-16">

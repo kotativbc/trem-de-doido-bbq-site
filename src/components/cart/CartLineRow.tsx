@@ -113,7 +113,7 @@ const CartLineRow = ({ line, onIncrement, onDecrement, onRemove, onNoteChange }:
               setDraft(line.note);
               setEditing(true);
             }}
-            className="text-xs text-primary/70 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded"
+            className="text-xs text-primary hover:text-primary/80 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded"
           >
             {line.note ? "Editar observação" : "+ Observação do item"}
           </button>

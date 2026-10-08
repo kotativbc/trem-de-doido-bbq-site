@@ -123,7 +123,8 @@ describe("fluxo de compra (integração)", () => {
       fireEvent.click(screen.getByRole("button", { name: "Adicionar mais Trem Vermelho" }));
       fireEvent.click(openCartButton());
       fireEvent.click(await screen.findByRole("button", { name: "Finalizar Pedido" }));
-      return screen.findByRole("button", { name: /Enviar Pedido via WhatsApp/ });
+      // O formulário é carregado sob demanda (lazy): a 1ª carga pode passar de 1 s no jsdom.
+      return screen.findByRole("button", { name: /Enviar Pedido via WhatsApp/ }, { timeout: 5000 });
     };
     const fillDelivery = () => {
       fill(/^Nome/, "Samuel");

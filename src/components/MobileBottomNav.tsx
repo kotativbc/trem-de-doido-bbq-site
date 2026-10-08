@@ -1,8 +1,9 @@
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import { UtensilsCrossed, MapPin, MessageCircle, ShoppingCart } from "lucide-react";
 import { whatsappChatUrl } from "@/config/business";
 import { useCart } from "@/hooks/useCart";
 import { useSettings } from "@/hooks/useSettings";
+import { scrollToId as scrollTo } from "@/lib/scroll";
 
 const itemClass =
   "flex flex-col items-center gap-1 text-muted-foreground hover:text-primary transition-colors min-w-[48px] min-h-[48px] justify-center focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded";
@@ -11,9 +12,6 @@ const MobileBottomNav = memo(() => {
   const { totalItems, setIsCartOpen } = useCart();
   const settings = useSettings();
 
-  const scrollTo = useCallback((id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-  }, []);
 
   return (
     <nav
