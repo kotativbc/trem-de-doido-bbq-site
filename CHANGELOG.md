@@ -2,6 +2,17 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/).
 
+## [1.2.0] — Dias e horários de funcionamento editáveis pelo link secreto
+
+### Adicionado
+- **Aba "Horários" no editor** (`/gerenciar/<código>/horarios`): liga/desliga cada dia da semana, define abrir/fechar (aceita fechar depois da meia-noite) e cadastra **dias fechados** (feriados, folgas). Mostra a prévia de como aparece no site e se está aberto agora.
+- **API PHP** `api/schedule.php`: leitura pública e gravação com o código secreto; validação (7 dias, HH:mm, datas reais e sem repetição, abrir ≠ fechar), histórico das últimas 30 versões em `api/data/history/schedule-NNNNNN.json`.
+- O site público (seção Localização & Horários, selo aberto/fechado, bloqueio de pedido com a loja fechada, dados estruturados para o Google) passa a usar os horários salvos no servidor.
+- `SettingsRepository.saveSchedule` (modo demo e servidor), testes de interface, do repositório PHP e da API.
+
+### Alterado
+- Teste da API: o "código errado" agora é garantidamente diferente do certo (antes falhava 1 vez em 16).
+
 ## [1.1.0] — Cardápio atualizado, hospedagem estática e editor por link secreto
 
 ### Revisão do cardápio (conforme o cardápio impresso mais recente)

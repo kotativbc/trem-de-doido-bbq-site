@@ -84,6 +84,18 @@ describe("repositório de configurações (modo demo)", () => {
     expect(localStorage.getItem(SETTINGS_STORAGE_KEY)).toBeNull();
   });
 
+  it("saveSchedule grava só dias e horários e preserva o resto das configurações", async () => {
+    const repo = createLocalSettingsRepository();
+    const hours = structuredClone(defaultBusinessSettings.hours);
+    hours[2] = { open: true, from: "12:00", to: "14:00" };
+    await repo.saveSchedule({ hours, closedDates: ["2026-12-25"] });
+    const saved = await repo.getSettings();
+    expect(saved.hours[2]).toEqual({ open: true, from: "12:00", to: "14:00" });
+    expect(saved.closedDates).toEqual(["2026-12-25"]);
+    expect(saved.phoneDisplay).toBe(defaultBusinessSettings.phoneDisplay);
+    await expect(repo.saveSchedule({ hours: hours.slice(0, 6), closedDates: [] })).rejects.toThrow();
+  });
+
   it("resetToDefaults restaura o padrão", async () => {
     const repo = createLocalSettingsRepository();
     await repo.saveSettings({ ...defaultBusinessSettings, instagramHandle: "outro" });

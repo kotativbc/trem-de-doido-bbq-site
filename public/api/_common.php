@@ -225,3 +225,118 @@ function tdd_write_catalog(array $catalog, int $baseRevision): array
     }
     return ['revision' => $next, 'updatedAt' => $updatedAt];
 }
+
+/* ------------------------------------------------------------------ */
+/* Dias e horários de funcionamento                                    */
+/* ------------------------------------------------------------------ */
+
+/** @return array{revision:int, updatedAt:?string, schedule:?array} */
+function tdd_read_schedule(): array
+{
+    $file = tdd_data_dir() . '/schedule.json';
+    $empty = ['revision' => 0, 'updatedAt' => null, 'schedule' => null];
+    if (!is_file($file)) {
+        return $empty;
+    }
+    $data = json_decode((string) file_get_contents($file), true);
+    if (!is_array($data) || !isset($data['schedule']) || !is_array($data['schedule'])) {
+        return $empty;
+    }
+    return [
+        'revision' => isset($data['revision']) ? (int) $data['revision'] : 0,
+        'updatedAt' => isset($data['updatedAt']) ? (string) $data['updatedAt'] : null,
+        'schedule' => $data['schedule'],
+    ];
+}
+
+function tdd_is_hhmm($value): bool
+{
+    return is_string($value) && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $value) === 1;
+}
+
+function tdd_is_ymd($value): bool
+{
+    if (!is_string($value) || preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $m) !== 1) {
+        return false;
+    }
+    return checkdate((int) $m[2], (int) $m[3], (int) $m[1]);
+}
+
+/** Confere os dias da semana e as datas fechadas. Devolve a mensagem do primeiro problema ou null. */
+function tdd_validate_schedule($schedule): ?string
+{
+    if (!is_array($schedule) || !isset($schedule['hours'], $schedule['closedDates'])
+        || !is_array($schedule['hours']) || !is_array($schedule['closedDates'])) {
+        return 'Formato de horários inválido.';
+    }
+    if (count($schedule['hours']) !== 7 || array_keys($schedule['hours']) !== range(0, 6)) {
+        return 'São necessários os 7 dias da semana.';
+    }
+    foreach ($schedule['hours'] as $day) {
+        if (!is_array($day) || !is_bool($day['open'] ?? null) || !tdd_is_hhmm($day['from'] ?? null) || !tdd_is_hhmm($day['to'] ?? null)) {
+            return 'Horário inválido (use o formato HH:mm).';
+        }
+        if ($day['open'] === true && $day['from'] === $day['to']) {
+            return 'O horário de abrir e de fechar não podem ser iguais.';
+        }
+    }
+    $dates = $schedule['closedDates'];
+    if (count($dates) > 400 || (count($dates) > 0 && array_keys($dates) !== range(0, count($dates) - 1))) {
+        return 'Lista de dias fechados inválida.';
+    }
+    $seen = [];
+    foreach ($schedule['closedDates'] as $date) {
+        if (!tdd_is_ymd($date) || isset($seen[$date])) {
+            return 'Dia fechado inválido ou repetido.';
+        }
+        $seen[$date] = true;
+    }
+    return null;
+}
+
+/**
+ * Grava os horários com trava de arquivo, mantendo cópia da versão anterior.
+ * @return array{revision:int, updatedAt:string}
+ */
+function tdd_write_schedule(array $schedule): array
+{
+    $dir = tdd_data_dir();
+    $lock = @fopen($dir . '/.lock', 'c');
+    if ($lock === false || !flock($lock, LOCK_EX)) {
+        tdd_json(500, ['error' => 'lock', 'message' => 'Não foi possível gravar agora. Tente de novo.']);
+    }
+
+    $current = tdd_read_schedule();
+    $file = $dir . '/schedule.json';
+    if (is_file($file)) {
+        $historyDir = $dir . '/history';
+        if (!is_dir($historyDir)) {
+            @mkdir($historyDir, 0755, true);
+        }
+        @copy($file, sprintf('%s/schedule-%06d.json', $historyDir, $current['revision']));
+        $old = glob($historyDir . '/schedule-*.json') ?: [];
+        sort($old);
+        foreach (array_slice($old, 0, max(0, count($old) - TDD_HISTORY_KEEP)) as $stale) {
+            @unlink($stale);
+        }
+    }
+
+    $next = $current['revision'] + 1;
+    $updatedAt = gmdate('c');
+    $payload = json_encode(
+        ['revision' => $next, 'updatedAt' => $updatedAt, 'schedule' => $schedule],
+        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT
+    );
+    $tmp = $file . '.tmp' . bin2hex(random_bytes(4));
+    $ok = $payload !== false && file_put_contents($tmp, $payload) !== false && rename($tmp, $file);
+    if (!$ok) {
+        @unlink($tmp);
+    }
+    flock($lock, LOCK_UN);
+    fclose($lock);
+
+    if (!$ok) {
+        tdd_json(500, ['error' => 'write', 'message' => 'Não foi possível salvar. Verifique a permissão de escrita da pasta api/data.']);
+    }
+    return ['revision' => $next, 'updatedAt' => $updatedAt];
+}

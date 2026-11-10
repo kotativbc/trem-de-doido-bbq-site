@@ -9,6 +9,7 @@ import { repositories } from "@/services";
 import CategoriesPage from "@/admin/pages/CategoriesPage";
 import ProductsPage from "@/admin/pages/ProductsPage";
 import EditorLayout from "./EditorLayout";
+import HoursPage from "./HoursPage";
 
 const Screen = ({ children }: { children: React.ReactNode }) => (
   <div className="flex min-h-screen items-center justify-center bg-background px-4">{children}</div>
@@ -63,6 +64,7 @@ const EditorRoutes = () => {
       <Route element={<EditorLayout token={token} />}>
         <Route index element={<ProductsPage />} />
         <Route path="categorias" element={<CategoriesPage />} />
+        <Route path="horarios" element={<HoursPage />} />
         <Route path="*" element={<Navigate to={`/gerenciar/${token}`} replace />} />
       </Route>
     </Routes>

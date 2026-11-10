@@ -7,6 +7,7 @@ import { seedCatalog } from "@/data/seed/catalog";
 import { repositories } from "@/services";
 import { CATALOG_STORAGE_KEY } from "@/services/local/localCatalogRepository";
 import NotFound from "@/pages/NotFound";
+import { defaultBusinessSettings } from "@/config/business";
 import EditorRoutes from "./EditorRoutes";
 
 const renderEditor = (path = "/gerenciar/codigo-de-teste-1234567890") => {
@@ -115,5 +116,74 @@ describe("editor do cardápio por link secreto", () => {
     Object.defineProperty(bad, "text", { value: () => Promise.resolve("isto não é json") });
     fireEvent.change(input, { target: { files: [bad] } });
     expect(await screen.findByText(/não é uma cópia de cardápio válida/)).toBeInTheDocument();
+  });
+
+  describe("horários de funcionamento", () => {
+    const openHoursPage = async () => {
+      renderEditor();
+      fireEvent.click(await screen.findByRole("link", { name: "Horários" }));
+      await screen.findByText("Dias e horários de funcionamento");
+    };
+
+    it("mostra o horário atual e o resumo de como aparece no site", async () => {
+      await openHoursPage();
+      expect(screen.getByLabelText("Quarta-feira: aberto")).toBeChecked();
+      expect(screen.getByLabelText("Segunda-feira: aberto")).not.toBeChecked();
+      expect(screen.getByLabelText("Quarta-feira: abre às")).toHaveValue("18:00");
+      const preview = screen.getByRole("region", { name: "Como vai aparecer no site" });
+      expect(preview).toHaveTextContent("Quarta a Domingo: 18:00 – 23:00");
+      expect(preview).toHaveTextContent("Fechado às segundas e terças-feiras");
+      expect(screen.getByRole("button", { name: "Salvar horários" })).toBeDisabled();
+    });
+
+    it("abre a segunda, fecha o domingo, muda o horário da sexta e grava no repositório", async () => {
+      await openHoursPage();
+      fireEvent.click(screen.getByLabelText("Segunda-feira: aberto"));
+      fireEvent.click(screen.getByLabelText("Domingo: aberto"));
+      fireEvent.change(screen.getByLabelText("Sexta-feira: fecha às"), { target: { value: "01:00" } });
+      const preview = screen.getByRole("region", { name: "Como vai aparecer no site" });
+      expect(preview).toHaveTextContent("Segunda: 18:00 – 23:00");
+      expect(preview).toHaveTextContent("Sexta: 18:00 – 01:00");
+      fireEvent.click(screen.getByRole("button", { name: "Salvar horários" }));
+
+      await waitFor(async () => {
+        const saved = await repositories.settings.getSettings();
+        expect(saved.hours[1].open).toBe(true);
+        expect(saved.hours[0].open).toBe(false);
+        expect(saved.hours[5].to).toBe("01:00");
+        // o resto das configurações não muda
+        expect(saved.whatsappNumber).toBe(defaultBusinessSettings.whatsappNumber);
+      });
+      expect(await screen.findByText(/Horários salvos/)).toBeInTheDocument();
+    });
+
+    it("adiciona e remove um dia fechado (feriado)", async () => {
+      await openHoursPage();
+      fireEvent.change(screen.getByLabelText("Adicionar dia fechado"), { target: { value: "2026-12-25" } });
+      fireEvent.click(screen.getByRole("button", { name: "Adicionar" }));
+      expect(screen.getByText("25/12/2026")).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Salvar horários" }));
+      await waitFor(async () => expect((await repositories.settings.getSettings()).closedDates).toEqual(["2026-12-25"]));
+
+      fireEvent.click(await screen.findByRole("button", { name: "Remover dia fechado 25/12/2026" }));
+      fireEvent.click(screen.getByRole("button", { name: "Salvar horários" }));
+      await waitFor(async () => expect((await repositories.settings.getSettings()).closedDates).toEqual([]));
+    });
+
+    it("recusa abrir e fechar no mesmo horário e não grava", async () => {
+      await openHoursPage();
+      fireEvent.change(screen.getByLabelText("Quarta-feira: fecha às"), { target: { value: "18:00" } });
+      fireEvent.click(screen.getByRole("button", { name: "Salvar horários" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent(/Quarta-feira.*não podem ser iguais/);
+      expect((await repositories.settings.getSettings()).hours[3].to).toBe("23:00");
+    });
+
+    it("se o servidor não puder ser lido, não oferece o formulário (evita sobrescrever com o padrão)", async () => {
+      vi.spyOn(repositories.settings, "getSettings").mockRejectedValue(new Error("Servidor fora do ar"));
+      renderEditor();
+      fireEvent.click(await screen.findByRole("link", { name: "Horários" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent("Servidor fora do ar");
+      expect(screen.queryByRole("button", { name: "Salvar horários" })).not.toBeInTheDocument();
+    });
   });
 });

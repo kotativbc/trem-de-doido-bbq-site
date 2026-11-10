@@ -4,6 +4,8 @@ import { createRepositories } from "..";
 import { ApiNotInstalledError, ForbiddenError, type EditorSession } from "./phpApi";
 import { createPhpCatalogRepository } from "./phpCatalogRepository";
 import { createPhpEditorAccess } from "./phpEditorAccess";
+import { createPhpSettingsRepository } from "./phpSettingsRepository";
+import { defaultBusinessSettings } from "@/config/business";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -154,5 +156,81 @@ describe("repositório de cardápio no servidor (PHP)", () => {
     const demo = createRepositories("demo");
     expect(repos.catalog).not.toBe(demo.catalog);
     expect(typeof repos.editor.authorize).toBe("function");
+  });
+});
+
+describe("horários de funcionamento no servidor (PHP)", () => {
+  let fetchMock: ReturnType<typeof vi.fn>;
+  beforeEach(() => {
+    localStorage.clear();
+    fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  const schedule = () => {
+    const hours = structuredClone(defaultBusinessSettings.hours);
+    hours[1] = { open: true, from: "11:00", to: "15:00" };
+    return { hours, closedDates: ["2026-12-25"] };
+  };
+  const scheduleEnvelope = (value: unknown) => json({ revision: 2, updatedAt: "2026-11-10T10:00:00+00:00", schedule: value });
+  const session = (token: string | null = "codigo-secreto-1234567890"): EditorSession => ({ token });
+
+  it("o site mostra os dias e horários salvos no servidor, e o resto continua vindo do site", async () => {
+    fetchMock.mockResolvedValue(scheduleEnvelope(schedule()));
+    const settings = await createPhpSettingsRepository(session(null)).getSettings();
+    expect(settings.hours[1]).toEqual({ open: true, from: "11:00", to: "15:00" });
+    expect(settings.closedDates).toEqual(["2026-12-25"]);
+    expect(settings.whatsappNumber).toBe(defaultBusinessSettings.whatsappNumber);
+    expect(fetchMock.mock.calls[0][0]).toMatch(/api\/schedule\.php$/);
+  });
+
+  it("sem horários salvos ainda, vale o padrão do site", async () => {
+    fetchMock.mockResolvedValue(scheduleEnvelope(null));
+    expect(await createPhpSettingsRepository(session(null)).getSettings()).toEqual(defaultBusinessSettings);
+  });
+
+  it("API ausente não derruba o site: usa o horário padrão", async () => {
+    const repo = createPhpSettingsRepository(session(null));
+    fetchMock.mockResolvedValueOnce(new Response("nope", { status: 404 }));
+    expect(await repo.getSettings()).toEqual(defaultBusinessSettings);
+    fetchMock.mockResolvedValueOnce(new Response("<!doctype html>", { status: 200, headers: { "Content-Type": "text/html" } }));
+    expect(await repo.getSettings()).toEqual(defaultBusinessSettings);
+  });
+
+  it("erro real do servidor aparece como erro (não finge que o horário padrão é o salvo)", async () => {
+    fetchMock.mockResolvedValue(new Response("boom", { status: 500 }));
+    await expect(createPhpSettingsRepository(session(null)).getSettings()).rejects.toThrow(/erro 500/);
+  });
+
+  it("grava com o código secreto no cabeçalho", async () => {
+    fetchMock.mockResolvedValue(json({ revision: 3, updatedAt: "x" }));
+    await createPhpSettingsRepository(session()).saveSchedule(schedule());
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toMatch(/api\/schedule\.php$/);
+    expect(init.method).toBe("POST");
+    expect((init.headers as Record<string, string>)["X-Editor-Token"]).toBe("codigo-secreto-1234567890");
+    expect(JSON.parse(init.body as string).schedule.closedDates).toEqual(["2026-12-25"]);
+  });
+
+  it("sem código na sessão nem chega a chamar o servidor", async () => {
+    await expect(createPhpSettingsRepository(session(null)).saveSchedule(schedule())).rejects.toBeInstanceOf(ForbiddenError);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("código recusado (403) e mensagem de validação do servidor (422) viram erros claros", async () => {
+    const repo = createPhpSettingsRepository(session());
+    fetchMock.mockResolvedValueOnce(json({ error: "forbidden" }, 403));
+    await expect(repo.saveSchedule(schedule())).rejects.toBeInstanceOf(ForbiddenError);
+    fetchMock.mockResolvedValueOnce(json({ error: "invalid", message: "Horário inválido (use o formato HH:mm)." }, 422));
+    await expect(repo.saveSchedule(schedule())).rejects.toThrow("Horário inválido");
+    fetchMock.mockResolvedValueOnce(new Response("x", { status: 404 }));
+    await expect(repo.saveSchedule(schedule())).rejects.toBeInstanceOf(ApiNotInstalledError);
+  });
+
+  it("createRepositories('php') usa o servidor para horários", async () => {
+    fetchMock.mockResolvedValue(scheduleEnvelope(schedule()));
+    const repos = createRepositories("php");
+    expect((await repos.settings.getSettings()).hours[1].from).toBe("11:00");
   });
 });

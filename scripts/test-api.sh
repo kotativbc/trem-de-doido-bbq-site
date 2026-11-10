@@ -12,6 +12,9 @@ trap cleanup EXIT
 
 mkdir -p "$TMP/site" && cp -r "$ROOT/public/api" "$TMP/site/api" && rm -f "$TMP/site/api/config.php"
 TOKEN="$(node -e 'console.log(require("crypto").randomBytes(24).toString("hex"))')"
+# código errado que difere do certo só no último caractere (garantido diferente)
+LAST="${TOKEN: -1}"; [ "$LAST" = "0" ] && SWAP=1 || SWAP=0
+WRONG="${TOKEN:0:47}$SWAP"
 HASH="$(printf %s "$TOKEN" | sha256sum | cut -d' ' -f1)"
 
 php -S "127.0.0.1:$PORT" -t "$TMP/site" >"$TMP/server.log" 2>&1 &
@@ -38,7 +41,7 @@ check "cardápio vazio inicial (catalog null)" '{"revision":0,"updatedAt":null,"
 echo "Autorização"
 check "verify com código certo" 200 "$(code "$BASE/api/catalog.php?action=verify" -H "X-Editor-Token: $TOKEN")"
 check "verify sem código" 403 "$(code "$BASE/api/catalog.php?action=verify")"
-check "verify com código errado" 403 "$(code "$BASE/api/catalog.php?action=verify" -H "X-Editor-Token: ${TOKEN:0:47}0")"
+check "verify com código errado" 403 "$(code "$BASE/api/catalog.php?action=verify" -H "X-Editor-Token: $WRONG")"
 check "gravar com código errado" 403 "$(code -X POST "$BASE/api/catalog.php" -H 'X-Editor-Token: aaaaaaaaaaaaaaaaaaaa' -d "{\"baseRevision\":0,\"catalog\":$CATALOG}")"
 
 echo "Gravação"
@@ -58,6 +61,26 @@ BAD_IMG="${CATALOG/\"order\":0,\"addonGroups\"/\"imageUrl\":\"javascript:alert(1
 check "imageUrl perigosa recusada" 422 "$(echo "$(post "$TOKEN" "{\"baseRevision\":2,\"catalog\":$BAD_IMG}")" | tail -1)"
 check "JSON inválido recusado" 400 "$(echo "$(post "$TOKEN" 'nao-e-json')" | tail -1)"
 check "método não permitido" 405 "$(code -X DELETE "$BASE/api/catalog.php")"
+
+echo "Dias e horários de funcionamento"
+HOURS='{"open":true,"from":"18:00","to":"23:00"}'
+CLOSED='{"open":false,"from":"18:00","to":"23:00"}'
+SCHED="{\"hours\":[$HOURS,$CLOSED,$CLOSED,$HOURS,$HOURS,$HOURS,$HOURS],\"closedDates\":[\"2026-12-25\",\"2026-12-24\"]}"
+spost() { curl -s -w '\n%{http_code}' -X POST "$BASE/api/schedule.php" -H "X-Editor-Token: $1" -H 'Content-Type: application/json' -d "$2"; }
+check "leitura pública inicial (schedule null)" '{"revision":0,"updatedAt":null,"schedule":null}' "$(curl -s "$BASE/api/schedule.php")"
+check "gravar sem código" 403 "$(code -X POST "$BASE/api/schedule.php" -d "{\"schedule\":$SCHED}")"
+check "gravar com código errado" 403 "$(echo "$(spost aaaaaaaaaaaaaaaaaaaa "{\"schedule\":$SCHED}")" | tail -1)"
+check "gravar horários válidos" 200 "$(echo "$(spost "$TOKEN" "{\"schedule\":$SCHED}")" | tail -1)"
+check "leitura devolve o salvo (datas ordenadas)" "2026-12-24,2026-12-25,true,false" "$(curl -s "$BASE/api/schedule.php" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s).schedule;console.log([j.closedDates.join(","),j.hours[0].open,j.hours[1].open].join(","))})')"
+check "segunda gravação mantém histórico" 200 "$(echo "$(spost "$TOKEN" "{\"schedule\":$SCHED}")" | tail -1)"
+check "histórico de horários guardado" 1 "$(ls "$TMP/site/api/data/history" | grep -c '^schedule-')"
+check "cardápio não foi afetado" "Suco" "$(curl -s "$BASE/api/catalog.php" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).catalog.products[0].name))')"
+check "só 6 dias recusado" 422 "$(echo "$(spost "$TOKEN" "{\"schedule\":{\"hours\":[$HOURS,$HOURS,$HOURS,$HOURS,$HOURS,$HOURS],\"closedDates\":[]}}")" | tail -1)"
+check "horário 25:00 recusado" 422 "$(echo "$(spost "$TOKEN" "{\"schedule\":${SCHED/\"to\":\"23:00\"/\"to\":\"25:00\"}}")" | tail -1)"
+check "abrir e fechar iguais recusado" 422 "$(echo "$(spost "$TOKEN" "{\"schedule\":${SCHED/\"from\":\"18:00\",\"to\":\"23:00\"/\"from\":\"18:00\",\"to\":\"18:00\"}}")" | tail -1)"
+check "data inexistente recusada" 422 "$(echo "$(spost "$TOKEN" "{\"schedule\":${SCHED/2026-12-25/2026-02-31}}")" | tail -1)"
+check "data repetida recusada" 422 "$(echo "$(spost "$TOKEN" "{\"schedule\":${SCHED/2026-12-24/2026-12-25}}")" | tail -1)"
+check "método não permitido" 405 "$(code -X DELETE "$BASE/api/schedule.php")"
 
 echo "Proteção de arquivos"
 [ -f "$TMP/site/api/data/.htaccess" ] && check ".htaccess criado em api/data" ok ok || check ".htaccess criado em api/data" ok ausente

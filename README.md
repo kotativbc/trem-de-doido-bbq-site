@@ -72,6 +72,7 @@ https://tremdedoidobbq.com.br/gerenciar/3f9a...c41d     (48 caracteres aleatóri
 - **Para gerar (ou trocar) o link**: `npm run gerar-link`, depois `npm run build` e envie `dist/` de novo. O link é mostrado uma única vez; guarde-o num lugar seguro. Gerar de novo invalida o link anterior (use isso se ele vazar).
 - **Cada alteração é salva na hora** no servidor e aparece para todos os clientes ao recarregar o site. Não precisa fazer build nem enviar arquivos para mudar o cardápio.
 - **Segurança de verdade**: o link funciona como uma chave. Quem o receber (ou quem o encontrar no histórico do navegador, num print ou numa mensagem encaminhada) consegue editar o cardápio. Compartilhe só com quem deve editar e troque o link se desconfiar de vazamento.
+- **Dias e horários de funcionamento**: a aba **Horários** do editor altera os dias da semana em que o restaurante abre, o horário de cada dia e os dias fechados (feriados). Clique em **Salvar horários**; o site público passa a mostrar a mudança na hora (inclusive o selo aberto/fechado). Os horários ficam em `api/data/schedule.json`. Se nunca forem alterados, valem os de `src/config/business.ts`.
 - **Cópias de segurança**: o servidor guarda as últimas 30 versões em `api/data/history/` (arquivos `catalog-NNNNNN.json`; para voltar a uma, restaure-a pelo botão "Restaurar cópia" do editor). O editor também tem "Baixar cópia". Faça uma cópia antes de mudanças grandes.
 - **Primeira vez**: enquanto ninguém salvar nada, o site mostra o cardápio que vem no código (`src/data/seed/catalog.ts`). A partir da primeira edição, o cardápio do servidor é o que vale; mudanças futuras nesse arquivo não aparecem sozinhas (use "Restaurar cópia").
 
@@ -90,7 +91,7 @@ src/
   config/      dados do negócio (business.ts) e textos do site
   domain/      regras puras e testadas: preço, carrinho, horário, taxa, cupom, pedido, WhatsApp, SEO…
   services/    contratos de repositório (repositories.ts) + implementação local (services/local) e PHP (services/php)
-public/api/    API PHP do cardápio (catalog.php, upload.php) copiada para dist/ no build
+public/api/    API PHP (catalog.php, schedule.php, upload.php) copiada para dist/ no build
   hooks/       TanStack Query + contexto do carrinho sobre os repositórios
   components/  seções do site, sacola/checkout, cardápio
   editor/      editor do cardápio por link secreto (rota /gerenciar/:código)

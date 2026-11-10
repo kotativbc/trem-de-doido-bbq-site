@@ -1,6 +1,6 @@
 import type { Coupon } from "@/domain/coupons";
 import type { Order, OrderStatus } from "@/domain/orders";
-import type { BusinessSettings } from "@/domain/settings";
+import type { BusinessSettings, Schedule } from "@/domain/settings";
 import type { Catalog, Category, Product } from "@/domain/types";
 
 /**
@@ -42,6 +42,8 @@ export interface EditorAccessRepository {
 export interface SettingsRepository {
   getSettings(): Promise<BusinessSettings>;
   saveSettings(settings: BusinessSettings): Promise<void>;
+  /** Grava só os dias e horários de funcionamento (é o que o editor por link secreto altera). */
+  saveSchedule(schedule: Schedule): Promise<void>;
   resetToDefaults(): Promise<void>;
 }
 

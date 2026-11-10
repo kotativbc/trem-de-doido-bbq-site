@@ -64,6 +64,12 @@ export const catalogSchema = z.object({
 export const dayHoursSchema = z.object({ open: z.boolean(), from: hhmm, to: hhmm });
 const minuteRange = z.object({ min: z.number().int().min(0), max: z.number().int().min(0) });
 
+/** Dias e horários de funcionamento: a parte das configurações que o editor do cardápio controla. */
+export const scheduleSchema = z.object({
+  hours: z.array(dayHoursSchema).length(7),
+  closedDates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).max(400),
+});
+
 export const settingsSchema = z.object({
   name: z.string().trim().min(1).max(80),
   city: z.string().trim().min(1).max(80),

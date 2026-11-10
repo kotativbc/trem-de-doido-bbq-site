@@ -9,6 +9,7 @@ const EditorLayout = ({ token }: { token: string }) => {
   const links = [
     { to: base, label: "Produtos", end: true },
     { to: `${base}/categorias`, label: "Categorias" },
+    { to: `${base}/horarios`, label: "Horários" },
   ];
 
   return (
@@ -49,7 +50,7 @@ const EditorLayout = ({ token }: { token: string }) => {
       <main className="container mx-auto px-4 py-6">
         <p className="mb-4 rounded-lg border border-border bg-[#111111] px-3 py-2 text-sm text-muted-foreground">
           {isSharedCatalog
-            ? "Cada alteração é salva na hora e aparece no site para todos os clientes. Guarde este link: quem o tiver consegue editar o cardápio."
+            ? "Cada alteração no cardápio é salva na hora; nos horários, use o botão Salvar. Tudo aparece no site para todos os clientes. Guarde este link: quem o tiver consegue editar o cardápio e os horários."
             : "Modo de teste: as alterações ficam só neste navegador e não aparecem para outros visitantes."}
         </p>
         <Outlet />

@@ -7,6 +7,14 @@ export interface DayHours {
   to: string;
 }
 
+/** Dias e horários de funcionamento (a parte das configurações editável pelo link do cardápio). */
+export interface Schedule {
+  /** 7 posições, índice = Date#getDay() (0 = domingo). */
+  hours: DayHours[];
+  /** Datas fechadas extraordinariamente, "YYYY-MM-DD". */
+  closedDates: string[];
+}
+
 export interface MinuteRange {
   min: number;
   max: number;

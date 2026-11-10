@@ -5,6 +5,7 @@ import { createLocalCouponRepository } from "./local/localCouponRepository";
 import { createLocalOrderRepository } from "./local/localOrderRepository";
 import { createPhpCatalogRepository } from "./php/phpCatalogRepository";
 import { createPhpEditorAccess } from "./php/phpEditorAccess";
+import { createPhpSettingsRepository } from "./php/phpSettingsRepository";
 import type { EditorSession } from "./php/phpApi";
 import type {
   AuthRepository,
@@ -55,7 +56,12 @@ export const createRepositories = (kind: BackendKind = backendKind): Repositorie
   };
   if (kind === "php") {
     const session: EditorSession = { token: null };
-    return { ...rest, catalog: createPhpCatalogRepository(session), editor: createPhpEditorAccess(session) };
+    return {
+      ...rest,
+      settings: createPhpSettingsRepository(session),
+      catalog: createPhpCatalogRepository(session),
+      editor: createPhpEditorAccess(session),
+    };
   }
   return { ...rest, catalog: createLocalCatalogRepository(), editor: { authorize: async () => true } };
 };
